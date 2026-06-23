@@ -6,50 +6,79 @@ import { startupData } from "@/lib/mockData";
 
 export default function Home() {
   const [analysis, setAnalysis] = useState<any>(null);
+  const [history, setHistory] = useState<any[]>([]);
+  const [context, setContext] = useState("");
+  const [goal, setGoal] = useState("Reach 100 paying customers");
+  const [loading, setLoading] = useState(false);
 
   const analyzeStartup = async () => {
-    const response = await fetch("/api/analyze", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        context: JSON.stringify(startupData),
-      }),
-    });
+    try {
+      setLoading(true);
 
-    const data = await response.json();
-    setAnalysis(data.analysis);
+      const response = await fetch("/api/analyze", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          goal,
+          context,
+        }),
+      });
+
+      const data = await response.json();
+
+      console.log(data.analysis);
+
+      setAnalysis(data.analysis);
+      setHistory((prev) => [data.analysis, ...prev]);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <main className="min-h-screen p-8 bg-slate-50 text-black">
       <h1 className="text-4xl font-bold mb-8">StartupOS</h1>
 
+      <input
+        type="text"
+        value={goal}
+        onChange={(e) => setGoal(e.target.value)}
+        placeholder="Enter startup goal"
+        className="w-full p-3 border rounded-lg mb-4"
+      />
+
+      <textarea
+        value={context}
+        onChange={(e) => setContext(e.target.value)}
+        placeholder="Paste meeting notes, customer feedback, startup updates..."
+        className="w-full p-4 border rounded-lg mb-4"
+        rows={8}
+      />
+
       <button
-        onClick={async () => {
-          try {
-            await analyzeStartup();
-          } catch (err) {
-            console.error(err);
-          }
-        }}
+        onClick={analyzeStartup}
+        disabled={loading}
+        className="mb-6 rounded bg-black px-4 py-2 text-white"
       >
-        Analyze Startup
+        {loading ? "Analyzing..." : "Analyze Startup"}
       </button>
 
       <div className="grid gap-4 md:grid-cols-2">
         <Card title="Goal">
-          <p>{startupData.goal}</p>
+          <p>{goal}</p>
         </Card>
 
         <Card title="Health Score">
-          <p>{startupData.healthScore}/100</p>
+          <p>{analysis?.healthScore ?? startupData.healthScore}/100</p>
         </Card>
 
         <Card title="Top Risks">
           <ul>
-            {startupData.risks.map((risk) => (
+            {(analysis?.risks ?? startupData.risks).map((risk: string) => (
               <li key={risk}>{risk}</li>
             ))}
           </ul>
@@ -57,57 +86,24 @@ export default function Home() {
 
         <Card title="Opportunities">
           <ul>
-            {startupData.opportunities.map((item) => (
-              <li key={item}>{item}</li>
-            ))}
+            {(analysis?.opportunities ?? startupData.opportunities).map(
+              (item: string) => (
+                <li key={item}>{item}</li>
+              )
+            )}
           </ul>
         </Card>
 
         <Card title="Next Actions">
           <ul>
-            {startupData.nextActions.map((action) => (
-            <li key={action}>{action}</li>
-           ))}
+            {(analysis?.nextActions ?? startupData.nextActions).map(
+              (action: string) => (
+                <li key={action}>{action}</li>
+              )
+            )}
           </ul>
         </Card>
       </div>
-
-      {analysis && (
-  <div className="mt-8 rounded bg-white p-6 shadow">
-    <h2 className="mb-4 text-xl font-bold">AI Analysis</h2>
-
-    <p>
-      <strong>Health Score:</strong> {analysis.healthScore}
-    </p>
-
-    <p className="mt-3">
-      <strong>Risks:</strong>
-    </p>
-    <ul>
-      {analysis.risks?.map((risk: string) => (
-        <li key={risk}>{risk}</li>
-      ))}
-    </ul>
-
-    <p className="mt-3">
-      <strong>Opportunities:</strong>
-    </p>
-    <ul>
-      {analysis.opportunities?.map((item: string) => (
-        <li key={item}>{item}</li>
-      ))}
-    </ul>
-
-    <p className="mt-3">
-      <strong>Next Actions:</strong>
-    </p>
-    <ul>
-      {analysis.nextActions?.map((action: string) => (
-        <li key={action}>{action}</li>
-      ))}
-    </ul>
-  </div>
-  )}
     </main>
   );
 }

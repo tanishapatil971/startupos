@@ -13,8 +13,10 @@ export async function POST(request: Request) {
       contents: `
 You are an expert startup advisor.
 
-Analyze this startup:
+Startup Goal:
+${body.goal}
 
+Startup Context:
 ${body.context}
 
 Return ONLY valid JSON:
