@@ -27,11 +27,13 @@ export default function Home() {
       });
 
       const data = await response.json();
-console.log(data);
 
-      console.log(data.analysis);
+if (!data.success) {
+  console.error(data.error);
+  return;
+}
 
-      setAnalysis(data.analysis);
+setAnalysis(data.analysis);
 
 const previousReports = JSON.parse(
   localStorage.getItem("reports") || "[]"
@@ -45,6 +47,7 @@ previousReports.unshift({
   risks: data.analysis.risks,
   opportunities: data.analysis.opportunities,
   nextActions: data.analysis.nextActions,
+  roadmap: data.analysis.roadmap,
 });
 
 localStorage.setItem(

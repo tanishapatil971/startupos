@@ -19,18 +19,53 @@ ${body.goal}
 Startup Context:
 ${body.context}
 
-Return ONLY valid JSON:
+Return ONLY valid JSON in this exact format:
 
 {
-  "healthScore": 0,
-  "risks": [],
-  "opportunities": [],
-  "nextActions": []
+  "healthScore": 82,
+  "risks": [
+    "...",
+    "...",
+    "..."
+  ],
+  "opportunities": [
+    "...",
+    "...",
+    "..."
+  ],
+  "nextActions": [
+    "...",
+    "...",
+    "..."
+  ],
+  "roadmap": [
+    {
+      "week": "Week 1",
+      "title": "...",
+      "status": "Pending"
+    },
+    {
+      "week": "Week 2",
+      "title": "...",
+      "status": "Pending"
+    },
+    {
+      "week": "Week 3",
+      "title": "...",
+      "status": "Pending"
+    },
+    {
+      "week": "Week 4",
+      "title": "...",
+      "status": "Goal"
+    }
+  ]
 }
 
-No markdown.
-No explanation.
-Only JSON.
+Rules:
+- Return ONLY JSON.
+- No markdown.
+- No explanation.
 `,
     });
 
