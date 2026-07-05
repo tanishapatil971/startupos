@@ -1,57 +1,117 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { supabase } from "@/lib/supabase";
 
 export default function NotificationsPage() {
   const [notifications, setNotifications] = useState<string[]>([]);
 
+
   useEffect(() => {
-    const reports = JSON.parse(localStorage.getItem("reports") || "[]");
+    async function loadNotifications() {
 
-    if (reports.length === 0) return;
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
 
-    const latest = reports[0];
-    const alerts: string[] = [];
+      if (!user) return;
 
-    if (latest.healthScore < 60) {
-      alerts.push("🔴 Your startup health score is below 60. Immediate action recommended.");
+
+      const { data, error } = await supabase
+        .from("reports")
+        .select("*")
+        .eq("user_id", user.id)
+        .order("created_at", {
+          ascending: false,
+        })
+        .limit(1)
+        .single();
+
+
+      if (error) {
+        console.log(error);
+        return;
+      }
+
+
+      const alerts: string[] = [];
+
+
+      if (data.health_score < 60) {
+        alerts.push(
+          "🔴 Your startup health score is below 60. Immediate action recommended."
+        );
+      }
+
+
+      (data.risks || []).forEach((risk: string) => {
+        alerts.push(`⚠️ Risk: ${risk}`);
+      });
+
+
+      (data.next_actions || []).forEach((action: string) => {
+        alerts.push(`📌 Action: ${action}`);
+      });
+
+
+      setNotifications(alerts);
     }
 
-    (latest.risks || []).forEach((risk: string) => {
-      alerts.push(`⚠️ Risk: ${risk}`);
-    });
 
-    (latest.nextActions || []).forEach((action: string) => {
-      alerts.push(`📌 Action: ${action}`);
-    });
+    loadNotifications();
 
-    setNotifications(alerts);
   }, []);
 
-  return (
-    <main className="min-h-screen bg-slate-950 text-white p-8">
-      <h1 className="text-4xl font-bold mb-2">
-        Notifications
-      </h1>
 
-      <p className="text-gray-400 mb-8">
-        AI-generated alerts and reminders.
-      </p>
+  return (
+    <main className="min-h-screen px-8 py-10 text-white">
+
+      <div className="mb-10">
+
+        <h1 className="shimmer-text text-5xl font-bold">
+          Notifications
+        </h1>
+
+
+        <p className="mt-3 text-gray-400">
+          AI alerts, risks and execution reminders.
+        </p>
+
+      </div>
+
 
       {notifications.length === 0 ? (
-        <p>No notifications.</p>
+
+        <div className="glass rounded-3xl p-10 text-gray-400">
+          No notifications yet.
+        </div>
+
       ) : (
+
         <div className="space-y-4">
+
           {notifications.map((item, index) => (
+
             <div
               key={index}
-              className="rounded-xl border border-slate-700 bg-slate-900 p-5"
+              className="
+                glass 
+                rounded-3xl 
+                p-6 
+                transition-all 
+                duration-300 
+                hover:-translate-y-1
+              "
             >
               {item}
             </div>
+
           ))}
+
         </div>
+
       )}
+
     </main>
   );
 }

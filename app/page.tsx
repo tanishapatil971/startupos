@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { supabase } from "@/lib/supabase";
 import Card from "@/components/Card";
 import { startupData } from "@/lib/mockData";
 
@@ -35,26 +36,33 @@ if (!data.success) {
 
 setAnalysis(data.analysis);
 
-const previousReports = JSON.parse(
-  localStorage.getItem("reports") || "[]"
-);
+const {
+  data: { user },
+} = await supabase.auth.getUser();
 
-previousReports.unshift({
-  id: Date.now(),
-  date: new Date().toLocaleString(),
-  goal,
-  healthScore: data.analysis.healthScore,
-  risks: data.analysis.risks,
-  opportunities: data.analysis.opportunities,
-  nextActions: data.analysis.nextActions,
-  roadmap: data.analysis.roadmap,
-});
+if (!user) {
+  console.log("No user found");
+  return;
+}
 
-localStorage.setItem(
-  "reports",
-  JSON.stringify(previousReports)
-);
-console.log(previousReports);
+const { error } = await supabase
+  .from("reports")
+  .insert({
+    user_id: user.id,
+    goal: goal,
+    health_score: data.analysis.healthScore,
+    risks: data.analysis.risks,
+    opportunities: data.analysis.opportunities,
+    next_actions: data.analysis.nextActions,
+    roadmap: data.analysis.roadmap,
+  });
+
+
+if (error) {
+  console.error("DATABASE ERROR:", error);
+} else {
+  console.log("REPORT SAVED SUCCESSFULLY");
+}
 
 setHistory((prev) => [data.analysis, ...prev]);
     } catch (err) {
@@ -68,19 +76,15 @@ setHistory((prev) => [data.analysis, ...prev]);
   const healthPct = Math.min(Math.max(healthScore, 0), 100);
 
   return (
-    <main className="relative min-h-screen overflow-x-hidden px-4 py-14 sm:px-8 lg:px-12">
+    <main className="relative min-h-screen overflow-x-hidden px-8 py-10">
       {/* Ambient background orbs */}
       <div className="pointer-events-none fixed left-1/2 top-[-10%] -z-10 h-[480px] w-[780px] -translate-x-1/2 rounded-full bg-indigo-600/20 blur-[120px]" />
       <div className="pointer-events-none fixed bottom-[-15%] right-[-10%] -z-10 h-[420px] w-[420px] rounded-full bg-cyan-500/10 blur-[120px]" />
 
       <div className="mx-auto max-w-6xl">
         {/* Header */}
-        <div className="fade-up mb-14 flex flex-col gap-3">
-          <span className="glass inline-flex w-fit items-center gap-2 rounded-full px-3.5 py-1.5 text-xs font-medium text-[var(--text-muted)]">
-            <span className="glow-pulse h-1.5 w-1.5 rounded-full bg-violet-400 shadow-[0_0_8px_2px_rgba(139,92,246,0.6)]" />
-            AI-powered startup intelligence
-          </span>
-          <h1 className="shimmer-text text-5xl font-semibold tracking-tight sm:text-6xl">
+        <div className="fade-up mb-8 flex flex-col gap-3">
+          <h1 className="shimmer-text text-5xl font-bold tracking-tight">
             StartupOS
           </h1>
           <p className="max-w-xl text-[15px] leading-relaxed text-[var(--text-muted)]">
@@ -137,11 +141,8 @@ setHistory((prev) => [data.analysis, ...prev]);
         </div>
 
         {/* Results grid */}
-        <div className="grid gap-5 md:grid-cols-2">
-          <Card title="Goal">
-            <p className="font-medium leading-relaxed">{goal}</p>
-          </Card>
-
+        <div className="grid gap-6 md:grid-cols-2">
+          <div className="md:col-span-2">
           <Card title="Health Score">
             <div className="flex items-end gap-2">
               <span className="text-4xl font-semibold tabular-nums tracking-tight text-white">
@@ -157,6 +158,11 @@ setHistory((prev) => [data.analysis, ...prev]);
                 style={{ width: `${healthPct}%` }}
               />
             </div>
+          </Card>
+          </div>
+
+          <Card title="Goal">
+            <p className="font-medium leading-relaxed">{goal}</p>
           </Card>
 
           <Card title="Top Risks">

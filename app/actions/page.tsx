@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { supabase } from "@/lib/supabase";
 
 export default function ActionsPage() {
   const [actions, setActions] = useState<
@@ -8,30 +9,44 @@ export default function ActionsPage() {
   >([]);
 
   useEffect(() => {
-    const reports = JSON.parse(localStorage.getItem("reports") || "[]");
+  async function loadActions() {
 
-    if (reports.length > 0) {
-      const saved = localStorage.getItem("actionProgress");
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
 
-      if (saved) {
-        setActions(JSON.parse(saved));
-      } else {
-        setActions(
-          (reports[0].nextActions || []).map((item: string) => ({
-            text: item,
-            completed: false,
-          }))
-        );
-      }
+    if (!user) return;
+
+
+    const { data, error } = await supabase
+      .from("reports")
+      .select("next_actions")
+      .eq("user_id", user.id)
+      .order("created_at", {
+        ascending: false,
+      })
+      .limit(1)
+      .single();
+
+
+    if (error) {
+      console.log(error);
+      return;
     }
-  }, []);
 
-  useEffect(() => {
-    localStorage.setItem(
-      "actionProgress",
-      JSON.stringify(actions)
+
+    setActions(
+      (data?.next_actions || []).map((item: string) => ({
+        text: item,
+        completed: false,
+      }))
     );
-  }, [actions]);
+  }
+
+
+  loadActions();
+
+}, []);
 
   const toggle = (index: number) => {
     setActions((prev) =>
@@ -50,54 +65,84 @@ export default function ActionsPage() {
       ? 0
       : Math.round((completed / actions.length) * 100);
 
+
   return (
-    <main className="min-h-screen bg-slate-950 text-white p-8">
-      <h1 className="text-4xl font-bold mb-2">
-        Action Tracker
-      </h1>
+    <main className="min-h-screen px-8 py-10 text-white">
 
-      <p className="text-gray-400 mb-8">
-        Complete AI-recommended tasks.
-      </p>
+      <div className="mb-10">
+        <h1 className="shimmer-text text-5xl font-bold">
+          Action Tracker
+        </h1>
 
-      <div className="mb-8">
-        <div className="flex justify-between mb-2">
-          <span>Progress</span>
-          <span>{progress}%</span>
+        <p className="mt-3 text-gray-400">
+          Execute AI recommended growth tasks.
+        </p>
+      </div>
+
+
+      <div className="glass mb-8 rounded-3xl p-8">
+
+        <div className="mb-4 flex justify-between">
+          <p className="text-gray-400">
+            Execution Progress
+          </p>
+
+          <p className="font-bold text-indigo-300">
+            {progress}%
+          </p>
         </div>
 
-        <div className="h-3 rounded-full bg-slate-800">
+
+        <div className="h-4 overflow-hidden rounded-full bg-white/[0.06]">
           <div
-            className="h-3 rounded-full bg-blue-600 transition-all"
+            className="
+              h-full rounded-full
+              bg-gradient-to-r from-cyan-400 to-indigo-500
+              transition-all duration-700
+            "
             style={{ width: `${progress}%` }}
           />
         </div>
+
       </div>
 
-      <div className="space-y-4">
+
+      <div className="space-y-5">
+
         {actions.map((action, index) => (
           <label
             key={index}
-            className="flex items-center gap-4 rounded-xl border border-slate-700 bg-slate-900 p-5 cursor-pointer"
+            className="
+              glass flex cursor-pointer items-center
+              gap-5 rounded-3xl p-6
+              transition-all duration-300
+              hover:-translate-y-1
+            "
           >
+
             <input
               type="checkbox"
               checked={action.completed}
               onChange={() => toggle(index)}
+              className="h-5 w-5 accent-indigo-500"
             />
+
 
             <span
               className={
                 action.completed
-                  ? "line-through text-gray-500"
-                  : ""
+                  ? "text-gray-500 line-through"
+                  : "text-white"
               }
             >
               {action.text}
             </span>
+
           </label>
         ))}
+
       </div>
+
     </main>
   );
 }

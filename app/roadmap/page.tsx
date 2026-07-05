@@ -1,50 +1,121 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { supabase } from "@/lib/supabase";
 
 export default function RoadmapPage() {
   const [roadmap, setRoadmap] = useState<any[]>([]);
 
   useEffect(() => {
-    const reports = JSON.parse(localStorage.getItem("reports") || "[]");
+  async function loadRoadmap() {
 
-    if (reports.length > 0) {
-      setRoadmap(reports[0].roadmap || []);
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) return;
+
+
+    const { data, error } = await supabase
+      .from("reports")
+      .select("roadmap")
+      .eq("user_id", user.id)
+      .order("created_at", {
+        ascending: false,
+      })
+      .limit(1)
+      .single();
+
+
+    if (error) {
+      console.log(error);
+      return;
     }
-  }, []);
+
+
+    setRoadmap(data?.roadmap || []);
+  }
+
+  loadRoadmap();
+
+}, []);
 
   return (
-    <main className="min-h-screen bg-slate-950 text-white p-8">
-      <h1 className="text-4xl font-bold mb-2">AI Roadmap</h1>
-      <p className="text-gray-400 mb-8">
-        Personalized execution plan generated from your latest analysis.
-      </p>
+    <main className="min-h-screen px-8 py-10 text-white">
+
+      <div className="mb-12">
+        <h1 className="shimmer-text text-5xl font-bold">
+          AI Roadmap
+        </h1>
+
+        <p className="mt-3 text-gray-400">
+          Your personalized execution timeline.
+        </p>
+      </div>
+
 
       {roadmap.length === 0 ? (
-        <p className="text-gray-400">
-          Run a startup analysis to generate a roadmap.
-        </p>
+        <div className="glass rounded-3xl p-10">
+          <p className="text-gray-400">
+            Run an analysis to generate your roadmap.
+          </p>
+        </div>
       ) : (
-        <div className="space-y-6">
-          {roadmap.map((item: any, index: number) => (
+        <div className="relative space-y-6">
+
+          {roadmap.map((item, index) => (
             <div
               key={index}
-              className="rounded-xl border border-slate-700 bg-slate-900 p-6"
+              className="
+                glass relative rounded-3xl p-7
+                transition-all duration-300
+                hover:-translate-y-1
+              "
             >
+
               <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-blue-400 font-semibold">{item.week}</p>
-                  <h2 className="text-xl font-bold mt-1">{item.title}</h2>
+
+                <div className="flex gap-5 items-start">
+
+                  <div className="
+                    flex h-14 w-14 items-center justify-center
+                    rounded-2xl bg-indigo-500/20
+                    text-indigo-300 font-bold
+                  ">
+                    {index + 1}
+                  </div>
+
+
+                  <div>
+                    <p className="text-sm text-indigo-400 font-medium">
+                      {item.week}
+                    </p>
+
+                    <h2 className="mt-1 text-2xl font-semibold">
+                      {item.title}
+                    </h2>
+                  </div>
+
                 </div>
 
-                <span className="rounded-full bg-blue-600 px-4 py-1 text-sm">
+
+                <span className="
+                  rounded-full border border-white/10
+                  bg-white/[0.05]
+                  px-5 py-2 text-sm
+                  text-gray-300
+                ">
                   {item.status}
                 </span>
+
               </div>
+
             </div>
           ))}
+
         </div>
       )}
+
     </main>
   );
 }

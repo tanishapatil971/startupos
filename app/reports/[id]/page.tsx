@@ -2,81 +2,167 @@
 
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
+import { supabase } from "@/lib/supabase";
 
 export default function ReportDetailsPage() {
   const { id } = useParams();
+
   const [report, setReport] = useState<any>(null);
 
+
   useEffect(() => {
-    const reports = JSON.parse(localStorage.getItem("reports") || "[]");
+    async function loadReport() {
 
-    const selectedReport = reports.find(
-      (item: any) => item.id.toString() === id
-    );
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
 
-    setReport(selectedReport);
+      if (!user) return;
+
+
+      const { data, error } = await supabase
+        .from("reports")
+        .select("*")
+        .eq("id", id)
+        .eq("user_id", user.id)
+        .single();
+
+
+      if (error) {
+        console.log(error);
+        return;
+      }
+
+
+      setReport(data);
+    }
+
+
+    loadReport();
+
   }, [id]);
+
 
   if (!report) {
     return (
-      <main className="min-h-screen flex items-center justify-center bg-slate-950 text-white">
+      <main className="
+        min-h-screen 
+        flex 
+        items-center 
+        justify-center 
+        text-white
+      ">
         <h1>Report not found.</h1>
       </main>
     );
   }
 
+
   return (
-    <main className="min-h-screen bg-slate-950 text-white p-8">
-      <h1 className="text-4xl font-bold mb-2">{report.goal}</h1>
 
-      <p className="text-gray-400 mb-6">{report.date}</p>
+    <main className="min-h-screen px-8 py-10 text-white">
 
-      <div className="rounded-xl bg-slate-900 p-6 space-y-6">
+      <h1 className="shimmer-text text-5xl font-bold mb-3">
+        {report.goal}
+      </h1>
+
+
+      <p className="text-gray-400 mb-8">
+        {new Date(report.created_at).toLocaleString()}
+      </p>
+
+
+      <div className="glass rounded-3xl p-8 space-y-8">
+
 
         <div>
-          <h2 className="font-semibold text-xl mb-2">
+
+          <h2 className="text-xl font-semibold mb-3">
             Health Score
           </h2>
-          <p>{report.healthScore}/100</p>
+
+          <p className="text-3xl font-bold text-indigo-300">
+            {report.health_score}/100
+          </p>
+
         </div>
 
+
+
         <div>
-          <h2 className="font-semibold text-xl mb-2">
+
+          <h2 className="text-xl font-semibold mb-3">
             Risks
           </h2>
 
-          <ul className="list-disc ml-6">
-            {report.risks.map((risk: string) => (
-              <li key={risk}>{risk}</li>
-            ))}
+          <ul className="list-disc ml-6 space-y-2">
+
+            {(report.risks || []).map(
+              (risk: string) => (
+                <li key={risk}>
+                  {risk}
+                </li>
+              )
+            )}
+
           </ul>
+
         </div>
 
+
+
         <div>
-          <h2 className="font-semibold text-xl mb-2">
+
+          <h2 className="text-xl font-semibold mb-3">
             Opportunities
           </h2>
 
-          <ul className="list-disc ml-6">
-            {report.opportunities.map((item: string) => (
-              <li key={item}>{item}</li>
-            ))}
+
+          <ul className="list-disc ml-6 space-y-2">
+
+            {(report.opportunities || []).map(
+              (item: string) => (
+
+                <li key={item}>
+                  {item}
+                </li>
+
+              )
+            )}
+
           </ul>
+
         </div>
 
+
+
         <div>
-          <h2 className="font-semibold text-xl mb-2">
+
+          <h2 className="text-xl font-semibold mb-3">
             Next Actions
           </h2>
 
-          <ul className="list-disc ml-6">
-            {report.nextActions.map((action: string) => (
-              <li key={action}>{action}</li>
-            ))}
+
+          <ul className="list-disc ml-6 space-y-2">
+
+            {(report.next_actions || []).map(
+              (action: string) => (
+
+                <li key={action}>
+                  {action}
+                </li>
+
+              )
+            )}
+
           </ul>
+
         </div>
 
+
       </div>
+
     </main>
+
   );
 }
