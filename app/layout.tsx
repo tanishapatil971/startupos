@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import Script from "next/script";
 
 import AppShell from "@/components/AppShell";
 
@@ -30,6 +31,10 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable}`}
     >
       <body className="bg-slate-950 text-white">
+        <Script
+  src="https://accounts.google.com/gsi/client"
+  strategy="beforeInteractive"
+/>
 
         <AppShell>
           {children}
