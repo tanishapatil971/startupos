@@ -10,7 +10,6 @@ declare global {
 }
 
 export default function IntegrationsPage() {
-
   const [connected, setConnected] = useState(false);
   const [files, setFiles] = useState<any[]>([]);
   const [accessToken, setAccessToken] = useState("");
@@ -51,6 +50,7 @@ export default function IntegrationsPage() {
 
 
           setFiles(result.files || []);
+
           setConnected(true);
 
         },
@@ -66,6 +66,12 @@ export default function IntegrationsPage() {
 
 
   async function readWorkspaceFile(file: any) {
+
+    console.log(
+      "Selected file:",
+      file
+    );
+
 
     let url = "";
 
@@ -92,21 +98,10 @@ export default function IntegrationsPage() {
     }
 
 
-    else if (
-      file.mimeType === "text/plain" ||
-      file.mimeType === "text/csv"
-    ) {
-
-      url =
-        `https://www.googleapis.com/drive/v3/files/${file.id}?alt=media`;
-
-    }
-
-
     else {
 
       alert(
-        "This file type needs conversion. Please select Google Docs or Google Sheets."
+        "Please select Google Docs or Google Sheets file."
       );
 
       return;
@@ -115,22 +110,36 @@ export default function IntegrationsPage() {
 
 
 
-    const response = await fetch(
-      url,
-      {
-        headers: {
-          Authorization:
-            `Bearer ${accessToken}`,
-        },
-      }
-    );
+    const response =
+      await fetch(
+        url,
+        {
+          headers: {
+            Authorization:
+              `Bearer ${accessToken}`,
+          },
+        }
+      );
 
 
     const text =
       await response.text();
 
 
-    setDocumentText(text);
+    console.log(
+      "FILE TEXT:",
+      text
+    );
+
+
+    setDocumentText(
+      text || "No content found"
+    );
+
+
+    alert(
+      "Document loaded"
+    );
 
   }
 
@@ -144,20 +153,24 @@ export default function IntegrationsPage() {
 
 
     const response =
-      await fetch("/api/analyze", {
+      await fetch(
+        "/api/analyze",
+        {
 
-        method: "POST",
+          method: "POST",
 
-        headers: {
-          "Content-Type": "application/json",
-        },
+          headers: {
+            "Content-Type":
+              "application/json",
+          },
 
-        body: JSON.stringify({
-          idea: documentText,
-        }),
+          body:
+            JSON.stringify({
+              idea: documentText,
+            }),
 
-      });
-
+        }
+      );
 
 
     const result =
@@ -167,7 +180,8 @@ export default function IntegrationsPage() {
 
     const {
       data: { user },
-    } = await supabase.auth.getUser();
+    } =
+      await supabase.auth.getUser();
 
 
 
@@ -177,7 +191,8 @@ export default function IntegrationsPage() {
         .from("reports")
         .insert({
 
-          user_id: user.id,
+          user_id:
+            user.id,
 
           goal:
             "Google Workspace Analysis",
@@ -202,14 +217,16 @@ export default function IntegrationsPage() {
     }
 
 
+
     setLoading(false);
 
 
     alert(
-      "Workspace analyzed successfully 🚀"
+      "Analysis saved 🚀"
     );
 
   }
+
 
 
 
@@ -222,46 +239,136 @@ export default function IntegrationsPage() {
 
 
       <h1 className="shimmer-text text-5xl font-bold leading-tight pb-2">
+
         Integrations
+
       </h1>
 
 
-      <p className="mt-3 mb-10 text-gray-400">
-        Connect your startup workspace and let AI understand your company.
+      <p className="mb-10 text-gray-400">
+
+        Connect your startup workspace.
+
       </p>
 
 
 
 
-      <div className="glass rounded-3xl p-8 max-w-3xl">
+      <div className="glass rounded-3xl p-8">
 
 
-        <div className="flex justify-between items-center">
+        <button
+
+          onClick={connectGoogleWorkspace}
+
+          className="
+            rounded-2xl
+            bg-white
+            px-6
+            py-3
+            font-semibold
+            text-black
+          "
+        >
+
+          {connected
+            ? "Connected ✓"
+            : "Connect Google Workspace"}
+
+        </button>
 
 
-          <div>
-
-            <h2 className="text-2xl font-semibold">
-              Google Workspace
-            </h2>
 
 
-            <p className="text-gray-400 mt-2">
-              Connect Docs, Sheets and Drive.
-            </p>
 
-          </div>
+        <div className="mt-8 space-y-3">
+
+
+          {files.map((file) => (
+
+            <div
+
+              key={file.id}
+
+              onClick={() =>
+                readWorkspaceFile(file)
+              }
+
+
+              className="
+                cursor-pointer
+                rounded-xl
+                bg-white/[0.05]
+                p-4
+                hover:bg-white/[0.1]
+              "
+
+            >
+
+
+              📄 {file.name}
+
+
+              <p className="text-xs text-gray-500">
+
+                {file.mimeType}
+
+              </p>
+
+
+            </div>
+
+          ))}
+
+
+        </div>
+
+
+      </div>
+
+
+
+
+
+
+      {documentText && (
+
+        <div className="glass mt-8 rounded-3xl p-8">
+
+
+          <h2 className="text-2xl font-semibold">
+
+            AI Workspace Context
+
+          </h2>
+
+
+
+          <p className="
+            mt-5
+            max-h-60
+            overflow-y-auto
+            whitespace-pre-wrap
+            text-gray-300
+          ">
+
+            {documentText}
+
+          </p>
+
 
 
 
           <button
 
-            onClick={connectGoogleWorkspace}
+            onClick={analyzeWorkspace}
+
+            disabled={loading}
 
             className="
-              bg-white
-              text-black
+              mt-6
               rounded-2xl
+              bg-indigo-500
               px-6
               py-3
               font-semibold
@@ -269,143 +376,18 @@ export default function IntegrationsPage() {
 
           >
 
-            {connected
-              ? "Connected ✓"
-              : "Connect"}
+            {loading
+              ? "Analyzing..."
+              : "✨ Analyze Workspace"}
 
           </button>
 
 
+
         </div>
 
+      )}
 
-
-
-        {connected && (
-
-          <div className="mt-10">
-
-
-            <h3 className="text-xl font-semibold mb-4">
-              Workspace Files
-            </h3>
-
-
-
-            <div className="space-y-3">
-
-
-              {files.map((file) => (
-
-                <div
-
-                  key={file.id}
-
-                  onClick={() =>
-                    readWorkspaceFile(file)
-                  }
-
-
-                  className="
-                    cursor-pointer
-                    rounded-xl
-                    border
-                    border-white/10
-                    bg-white/[0.05]
-                    p-4
-                  "
-
-                >
-
-                  📄 {file.name}
-
-
-                  <p className="text-xs text-gray-500 mt-1">
-                    {file.mimeType}
-                  </p>
-
-
-                </div>
-
-              ))}
-
-
-            </div>
-
-
-
-
-
-            {documentText && (
-
-              <div className="
-                mt-8
-                rounded-2xl
-                border
-                border-white/10
-                bg-white/[0.04]
-                p-6
-              ">
-
-
-                <h3 className="text-xl font-semibold mb-4">
-                  AI Workspace Context
-                </h3>
-
-
-
-                <p className="
-                  text-gray-300
-                  max-h-60
-                  overflow-y-auto
-                  whitespace-pre-wrap
-                ">
-
-                  {documentText}
-
-                </p>
-
-
-
-
-                <button
-
-                  onClick={analyzeWorkspace}
-
-                  disabled={loading}
-
-                  className="
-                    mt-6
-                    rounded-2xl
-                    bg-gradient-to-r
-                    from-cyan-400
-                    to-indigo-500
-                    px-6
-                    py-3
-                    font-semibold
-                    text-white
-                  "
-
-                >
-
-                  {loading
-                    ? "Analyzing..."
-                    : "✨ Analyze Workspace"}
-
-                </button>
-
-
-              </div>
-
-            )}
-
-
-          </div>
-
-        )}
-
-
-      </div>
 
 
     </main>
