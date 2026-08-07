@@ -1558,7 +1558,7 @@ export default function LandingPage() {
             ].map(link => {
               const active = activeSection === link.id;
               return (
-                <a
+                <Link
                   key={link.id}
                   href={`#${link.id}`}
                   style={{
@@ -1574,7 +1574,7 @@ export default function LandingPage() {
                   onMouseLeave={e => { if (!active) e.currentTarget.style.color = t.muted; }}
                 >
                   {link.label}
-                </a>
+                </Link>
               );
             })}
             <div style={{ width: 1, height: 18, background: t.border, margin: "0 0.5rem" }} />
@@ -1796,12 +1796,12 @@ export default function LandingPage() {
                   { label: "Product demo", href: "#demo" },
                   { label: "FAQ", href: "#faq" },
                 ].map(l => (
-                  <a key={l.label} href={l.href} style={{ fontSize: "0.875rem", color: t.faint, textDecoration: "none", transition: "color 0.15s ease" }}
+                  <Link key={l.label} href={l.href} style={{ fontSize: "0.875rem", color: t.faint, textDecoration: "none", transition: "color 0.15s ease" }}
                     onMouseEnter={e => (e.currentTarget.style.color = t.muted)}
                     onMouseLeave={e => (e.currentTarget.style.color = t.faint)}
                   >
                     {l.label}
-                  </a>
+                  </Link>
                 ))}
               </div>
             </div>
