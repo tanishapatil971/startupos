@@ -21,7 +21,7 @@ export default function AuthGuard({
     async function checkUser() {
 
 
-      if (pathname === "/login") {
+      if (pathname === "/login" || pathname === "/landing") {
 
         setChecking(false);
         return;
@@ -37,7 +37,7 @@ export default function AuthGuard({
 
       if (!session) {
 
-        router.push("/login");
+        router.push("/landing");
         return;
 
       }

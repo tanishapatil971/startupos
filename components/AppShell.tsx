@@ -14,7 +14,7 @@ export default function AppShell({
   const pathname = usePathname();
 
   // pages without dashboard layout
-  if (pathname === "/login") {
+  if (pathname === "/login" || pathname === "/landing") {
     return children;
   }
 
