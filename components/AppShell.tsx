@@ -1,17 +1,15 @@
 "use client";
 
 import { usePathname } from "next/navigation";
+import { useState } from "react";
 
 import Sidebar from "@/components/Sidebar";
 import Topbar from "@/components/Topbar";
 import AuthGuard from "@/components/AuthGuard";
 
-export default function AppShell({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   // pages without dashboard layout
   if (pathname === "/login" || pathname === "/landing") {
@@ -20,23 +18,19 @@ export default function AppShell({
 
   return (
     <AuthGuard>
-
-      <div className="flex min-h-screen">
-
-        <Sidebar />
-
-        <div className="flex flex-1 flex-col">
-
-          <Topbar />
-
-          <main className="flex-1 overflow-y-auto">
-            {children}
+      <div className="flex min-h-screen bg-[var(--background)]">
+        <Sidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
+        
+        <div className="flex min-w-0 flex-1 flex-col">
+          <Topbar onMenuClick={() => setIsSidebarOpen(true)} />
+          
+          <main className="flex-1 overflow-x-hidden overflow-y-auto">
+            <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 md:py-10 lg:px-8">
+              {children}
+            </div>
           </main>
-
         </div>
-
       </div>
-
     </AuthGuard>
   );
 }

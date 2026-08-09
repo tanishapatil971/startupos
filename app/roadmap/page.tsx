@@ -2,120 +2,85 @@
 
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
+import PageHeader from "@/components/PageHeader";
+import EmptyState from "@/components/EmptyState";
+import Badge from "@/components/Badge";
 
 export default function RoadmapPage() {
   const [roadmap, setRoadmap] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-  async function loadRoadmap() {
+    async function loadRoadmap() {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
 
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+      const { data, error } = await supabase
+        .from("reports")
+        .select("roadmap")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .single();
 
-    if (!user) return;
-
-
-    const { data, error } = await supabase
-      .from("reports")
-      .select("roadmap")
-      .eq("user_id", user.id)
-      .order("created_at", {
-        ascending: false,
-      })
-      .limit(1)
-      .single();
-
-
-    if (error) {
-      console.log(error);
-      return;
+      if (!error && data) {
+        setRoadmap(data.roadmap || []);
+      }
+      setLoading(false);
     }
+    loadRoadmap();
+  }, []);
 
-
-    setRoadmap(data?.roadmap || []);
+  if (loading) {
+    return (
+      <div className="flex min-h-[50vh] items-center justify-center">
+        <div className="h-6 w-6 animate-spin rounded-full border-2 border-indigo-500/30 border-t-indigo-500" />
+      </div>
+    );
   }
 
-  loadRoadmap();
-
-}, []);
-
   return (
-    <main className="min-h-screen px-8 py-10 text-white">
-
-      <div className="mb-12">
-        <h1 className="shimmer-text text-5xl font-bold">
-          AI Roadmap
-        </h1>
-
-        <p className="mt-3 text-gray-400">
-          Your personalized execution timeline.
-        </p>
-      </div>
-
+    <>
+      <PageHeader 
+        title="Execution Roadmap" 
+        description="Your strategic timeline broken down by milestones and target phases." 
+      />
 
       {roadmap.length === 0 ? (
-        <div className="glass rounded-3xl p-10">
-          <p className="text-gray-400">
-            Run an analysis to generate your roadmap.
-          </p>
-        </div>
+        <EmptyState
+          title="No Roadmap Generated"
+          description="Run an analysis in the Command Center to generate a strategic timeline."
+          icon="🗺️"
+        />
       ) : (
-        <div className="relative space-y-6">
-
+        <div className="relative space-y-6 before:absolute before:inset-y-0 before:left-[35px] before:w-[2px] before:bg-white/[0.05]">
           {roadmap.map((item, index) => (
             <div
               key={index}
-              className="
-                glass relative rounded-3xl p-7
-                transition-all duration-300
-                hover:-translate-y-1
-              "
+              className="glass relative z-10 flex flex-col gap-5 rounded-[24px] p-6 transition-all duration-300 hover:-translate-y-1 hover:border-indigo-500/30 sm:flex-row sm:items-center sm:justify-between"
             >
-
-              <div className="flex items-center justify-between">
-
-                <div className="flex gap-5 items-start">
-
-                  <div className="
-                    flex h-14 w-14 items-center justify-center
-                    rounded-2xl bg-indigo-500/20
-                    text-indigo-300 font-bold
-                  ">
-                    {index + 1}
-                  </div>
-
-
-                  <div>
-                    <p className="text-sm text-indigo-400 font-medium">
-                      {item.week}
-                    </p>
-
-                    <h2 className="mt-1 text-2xl font-semibold">
-                      {item.title}
-                    </h2>
-                  </div>
-
+              <div className="flex items-start gap-6">
+                <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-indigo-500/10 text-lg font-bold text-indigo-400 ring-4 ring-[var(--background)]">
+                  {index + 1}
                 </div>
 
-
-                <span className="
-                  rounded-full border border-white/10
-                  bg-white/[0.05]
-                  px-5 py-2 text-sm
-                  text-gray-300
-                ">
-                  {item.status}
-                </span>
-
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-wider text-indigo-400">
+                    {item.week}
+                  </p>
+                  <h2 className="mt-1 text-xl font-semibold text-white">
+                    {item.title}
+                  </h2>
+                </div>
               </div>
 
+              <div className="pl-[80px] sm:pl-0">
+                <Badge variant="default">{item.status}</Badge>
+              </div>
             </div>
           ))}
-
         </div>
       )}
-
-    </main>
+    </>
   );
 }

@@ -1,117 +1,99 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { supabase } from "@/lib/supabase";
+import { useState } from "react";
+import PageHeader from "@/components/PageHeader";
+import EmptyState from "@/components/EmptyState";
 
 export default function NotificationsPage() {
-  const [notifications, setNotifications] = useState<string[]>([]);
-
-
-  useEffect(() => {
-    async function loadNotifications() {
-
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-
-      if (!user) return;
-
-
-      const { data, error } = await supabase
-        .from("reports")
-        .select("*")
-        .eq("user_id", user.id)
-        .order("created_at", {
-          ascending: false,
-        })
-        .limit(1)
-        .single();
-
-
-      if (error) {
-        console.log(error);
-        return;
-      }
-
-
-      const alerts: string[] = [];
-
-
-      if (data.health_score < 60) {
-        alerts.push(
-          "🔴 Your startup health score is below 60. Immediate action recommended."
-        );
-      }
-
-
-      (data.risks || []).forEach((risk: string) => {
-        alerts.push(`⚠️ Risk: ${risk}`);
-      });
-
-
-      (data.next_actions || []).forEach((action: string) => {
-        alerts.push(`📌 Action: ${action}`);
-      });
-
-
-      setNotifications(alerts);
+  const [notifications, setNotifications] = useState([
+    {
+      id: 1,
+      title: "New Analysis Complete",
+      message: "Your latest startup health report is ready to view.",
+      time: "2 hours ago",
+      read: false,
+      type: "success",
+    },
+    {
+      id: 2,
+      title: "Risk Alert: Burn Rate",
+      message: "Your current trajectory suggests runway may end sooner than expected.",
+      time: "1 day ago",
+      read: true,
+      type: "risk",
+    },
+    {
+      id: 3,
+      title: "Weekly Roadmap Updated",
+      message: "AI has generated new tasks for the upcoming sprint.",
+      time: "3 days ago",
+      read: true,
+      type: "info",
     }
+  ]);
 
+  const markAllRead = () => {
+    setNotifications(notifications.map(n => ({ ...n, read: true })));
+  };
 
-    loadNotifications();
-
-  }, []);
-
+  const getIcon = (type: string) => {
+    switch (type) {
+      case "success": return "✅";
+      case "risk": return "⚠️";
+      default: return "ℹ️";
+    }
+  };
 
   return (
-    <main className="min-h-screen px-8 py-10 text-white">
-
-      <div className="mb-10">
-
-        <h1 className="shimmer-text text-5xl font-bold">
-          Notifications
-        </h1>
-
-
-        <p className="mt-3 text-gray-400">
-          AI alerts, risks and execution reminders.
-        </p>
-
-      </div>
-
+    <>
+      <PageHeader 
+        title="Notifications" 
+        description="Stay updated on your startup's strategic changes and AI alerts." 
+        action={
+          <button 
+            onClick={markAllRead}
+            className="text-sm font-medium text-indigo-400 hover:text-indigo-300 transition-colors"
+          >
+            Mark all as read
+          </button>
+        }
+      />
 
       {notifications.length === 0 ? (
-
-        <div className="glass rounded-3xl p-10 text-gray-400">
-          No notifications yet.
-        </div>
-
+        <EmptyState 
+          title="All Caught Up" 
+          description="You have no new notifications right now."
+          icon="🔔"
+        />
       ) : (
-
-        <div className="space-y-4">
-
-          {notifications.map((item, index) => (
-
-            <div
-              key={index}
-              className="
-                glass 
-                rounded-3xl 
-                p-6 
-                transition-all 
-                duration-300 
-                hover:-translate-y-1
-              "
+        <div className="grid gap-4">
+          {notifications.map((notif, index) => (
+            <div 
+              key={notif.id}
+              className={`glass flex gap-4 rounded-2xl p-5 transition-all hover:bg-white/[0.04] ${notif.read ? "opacity-60" : "border-l-4 border-l-indigo-500"}`}
+              style={{ animationDelay: `${index * 50}ms` }}
             >
-              {item}
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white/[0.05] text-lg">
+                {getIcon(notif.type)}
+              </div>
+              
+              <div className="flex-1">
+                <div className="flex items-start justify-between gap-4">
+                  <h3 className={`font-medium ${notif.read ? "text-[var(--text-muted)]" : "text-white"}`}>
+                    {notif.title}
+                  </h3>
+                  <span className="shrink-0 text-xs text-[var(--text-faint)]">
+                    {notif.time}
+                  </span>
+                </div>
+                <p className="mt-1 text-sm text-[var(--text-muted)]">
+                  {notif.message}
+                </p>
+              </div>
             </div>
-
           ))}
-
         </div>
-
       )}
-
-    </main>
+    </>
   );
 }

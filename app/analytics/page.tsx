@@ -2,124 +2,114 @@
 
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
+import PageHeader from "@/components/PageHeader";
+import Card from "@/components/Card";
+import EmptyState from "@/components/EmptyState";
+import Badge from "@/components/Badge";
 
 export default function AnalyticsPage() {
-  const [report, setReport] = useState<any>(null);
+  const [reports, setReports] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-  async function loadAnalytics() {
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+    async function loadAnalytics() {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
 
-    if (!user) return;
+      const { data, error } = await supabase
+        .from("reports")
+        .select("*")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false })
+        .limit(2); // Fetch last 2 to calculate trend
 
-
-    const { data, error } = await supabase
-      .from("reports")
-      .select("*")
-      .eq("user_id", user.id)
-      .order("created_at", {
-        ascending: false,
-      })
-      .limit(1)
-      .single();
-
-
-    if (error) {
-      console.log(error);
-      return;
+      if (!error && data) {
+        setReports(data);
+      }
+      setLoading(false);
     }
 
+    loadAnalytics();
+  }, []);
 
-    setReport(data);
-  }
-
-
-  loadAnalytics();
-
-}, []);
-
-  if (!report) {
+  if (loading) {
     return (
-      <main className="min-h-screen px-8 py-10 text-white">
-        <h1 className="shimmer-text text-5xl font-bold">
-          Analytics
-        </h1>
-
-        <p className="mt-6 text-gray-400">
-          No analysis found.
-        </p>
-      </main>
+      <div className="flex min-h-[50vh] items-center justify-center">
+        <div className="h-6 w-6 animate-spin rounded-full border-2 border-indigo-500/30 border-t-indigo-500" />
+      </div>
     );
   }
 
+  if (reports.length === 0) {
+    return (
+      <>
+        <PageHeader title="Analytics" description="Founder intelligence dashboard." />
+        <EmptyState
+          title="No Analytics Data"
+          description="Run your first startup analysis to populate this dashboard with intelligence."
+          icon="📊"
+        />
+      </>
+    );
+  }
+
+  const current = reports[0];
+  const previous = reports.length > 1 ? reports[1] : null;
+
+  const healthScore = current.health_score;
+  const healthDiff = previous ? healthScore - previous.health_score : 0;
+  
   const cards = [
-    ["Health Score", `${report.health_score}/100`],
-    ["Risks Found", report.risks?.length ?? 0],
-    ["Opportunities", report.opportunities?.length ?? 0],
-    ["Actions", report.next_actions?.length ?? 0],
-    ["Roadmap Steps", report.roadmap?.length ?? 0],
+    {
+      title: "Health Score",
+      value: `${healthScore}/100`,
+      trend: previous ? (
+        <Badge variant={healthDiff > 0 ? "success" : healthDiff < 0 ? "risk" : "default"}>
+          {healthDiff > 0 ? "+" : ""}{healthDiff} from last analysis
+        </Badge>
+      ) : null
+    },
+    {
+      title: "Risks Found",
+      value: current.risks?.length ?? 0,
+    },
+    {
+      title: "Opportunities",
+      value: current.opportunities?.length ?? 0,
+    },
+    {
+      title: "Active Actions",
+      value: current.next_actions?.length ?? 0,
+    },
   ];
 
   return (
-    <main className="min-h-screen px-8 py-10 text-white">
+    <>
+      <PageHeader title="Analytics" description="Founder intelligence dashboard." />
 
-      <div className="mb-10">
-        <h1 className="shimmer-text text-5xl font-bold">
-          Analytics
-        </h1>
-
-        <p className="mt-3 text-gray-400">
-          Founder intelligence dashboard.
-        </p>
-      </div>
-
-
-      <div className="grid gap-6 md:grid-cols-3">
-
-        {cards.map(([title, value]) => (
-          <div
-            key={title}
-            className="
-              glass rounded-3xl p-7
-              transition-all duration-300
-              hover:-translate-y-1
-            "
-          >
-
-            <p className="text-sm uppercase tracking-widest text-gray-500">
-              {title}
-            </p>
-
-            <h2 className="mt-5 text-5xl font-bold">
-              {value}
+      <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+        {cards.map((card, i) => (
+          <Card key={card.title} title={card.title} className="hover:-translate-y-1">
+            <h2 className="mt-2 text-4xl font-bold tracking-tight text-white">
+              {card.value}
             </h2>
-
-          </div>
+            {card.trend && <div className="mt-4">{card.trend}</div>}
+          </Card>
         ))}
-
       </div>
 
-
-      <div className="glass mt-8 rounded-3xl p-8">
-
-        <p className="mb-3 text-gray-400">
-          Startup Health
-        </p>
-
-        <div className="h-4 rounded-full bg-white/[0.06]">
+      <Card title="Startup Health Trend" className="mt-8">
+        <div className="mb-2 flex justify-between text-sm">
+          <span className="text-[var(--text-muted)]">Current Standing</span>
+          <span className="font-bold text-indigo-400">{healthScore}%</span>
+        </div>
+        <div className="h-4 overflow-hidden rounded-full bg-white/[0.06]">
           <div
-            className="
-              h-4 rounded-full
-              bg-gradient-to-r from-cyan-400 to-indigo-500
-            "
-            style={{ width: `${report.health_score}%` }}
+            className="h-full rounded-full bg-gradient-to-r from-cyan-400 to-indigo-500 transition-all duration-1000 ease-out"
+            style={{ width: `${healthScore}%` }}
           />
         </div>
-
-      </div>
-
-    </main>
+      </Card>
+    </>
   );
 }

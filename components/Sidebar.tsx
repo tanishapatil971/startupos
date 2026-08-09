@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useState } from "react";
 
 const links = [
   { name: "Dashboard", href: "/" },
@@ -14,45 +15,73 @@ const links = [
   { name: "Notifications", href: "/notifications" },
 ];
 
-export default function Sidebar() {
+export default function Sidebar({
+  isOpen,
+  setIsOpen,
+}: {
+  isOpen: boolean;
+  setIsOpen: (open: boolean) => void;
+}) {
   const pathname = usePathname();
 
   return (
-    <aside className="w-72 min-h-screen border-r border-white/10 bg-white/[0.03] backdrop-blur-xl p-6">
+    <>
+      {/* Mobile overlay */}
+      {isOpen && (
+        <div
+          className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm lg:hidden"
+          onClick={() => setIsOpen(false)}
+        />
+      )}
 
-      <div className="mb-10">
-        <h1 className="text-3xl font-bold bg-gradient-to-r from-indigo-400 to-cyan-400 bg-clip-text text-transparent">
-          StartupOS
-        </h1>
+      {/* Sidebar container */}
+      <aside
+        className={`fixed inset-y-0 left-0 z-50 flex w-72 flex-col border-r border-[var(--border-subtle)] bg-[var(--surface)] transition-transform duration-300 lg:static lg:translate-x-0 ${
+          isOpen ? "translate-x-0" : "-translate-x-full"
+        }`}
+      >
+        <div className="flex items-center justify-between p-6">
+          <div>
+            <h1 className="bg-gradient-to-r from-indigo-400 to-cyan-400 bg-clip-text text-2xl font-bold tracking-tight text-transparent">
+              StartupOS
+            </h1>
+            <p className="mt-1 text-xs font-medium text-[var(--text-muted)]">
+              AI Strategic Co-Founder
+            </p>
+          </div>
+          <button
+            onClick={() => setIsOpen(false)}
+            className="p-2 text-gray-400 hover:text-white lg:hidden"
+            aria-label="Close sidebar"
+          >
+            ✕
+          </button>
+        </div>
 
-        <p className="text-xs text-gray-500 mt-2">
-          AI Strategic Co-Founder
-        </p>
-      </div>
+        <nav className="flex-1 space-y-1.5 overflow-y-auto p-4">
+          {links.map((link) => {
+            const active = pathname === link.href;
 
-      <nav className="space-y-2">
-        {links.map((link) => {
-          const active = pathname === link.href;
-
-          return (
-            <Link
-              key={link.href}
-              href={link.href}
-              className={`
-                flex items-center rounded-xl px-4 py-3
-                transition-all duration-200
-                ${
-                  active
-                    ? "bg-indigo-500/20 text-white border border-indigo-400/30 shadow-lg shadow-indigo-500/10"
-                    : "text-gray-400 hover:text-white hover:bg-white/[0.06]"
-                }
-              `}
-            >
-              {link.name}
-            </Link>
-          );
-        })}
-      </nav>
-    </aside>
+            return (
+              <Link
+                key={link.href}
+                href={link.href}
+                onClick={() => setIsOpen(false)}
+                className={`
+                  flex items-center rounded-xl px-4 py-2.5 text-[15px] font-medium transition-all duration-200
+                  ${
+                    active
+                      ? "bg-indigo-500/10 text-indigo-400"
+                      : "text-[var(--text-muted)] hover:bg-white/[0.04] hover:text-white"
+                  }
+                `}
+              >
+                {link.name}
+              </Link>
+            );
+          })}
+        </nav>
+      </aside>
+    </>
   );
 }
