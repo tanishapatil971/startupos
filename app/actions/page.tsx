@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import PageHeader from "@/components/PageHeader";
-import EmptyState from "@/components/EmptyState";
 import Badge from "@/components/Badge";
 
 export default function ActionsPage() {
@@ -50,7 +49,7 @@ export default function ActionsPage() {
   if (loading) {
     return (
       <div className="flex min-h-[50vh] items-center justify-center">
-        <div className="h-6 w-6 animate-spin rounded-full border-2 border-indigo-500/30 border-t-indigo-500" />
+        <div className="h-5 w-5 animate-spin rounded-full border-2 border-[var(--accent)]/30 border-t-[var(--accent)]" />
       </div>
     );
   }
@@ -63,59 +62,63 @@ export default function ActionsPage() {
       />
 
       {actions.length === 0 ? (
-        <EmptyState
-          title="No Actions Pending"
-          description="You have no recommended actions. Run an analysis in the Command Center."
-          icon="✅"
-        />
+        <div className="rounded-xl border border-[var(--border-subtle)] bg-[var(--surface-raised)] p-8 text-center sm:p-12">
+          <div className="mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-lg bg-[var(--accent-subtle)]">
+            <svg className="h-5 w-5 text-[var(--accent)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </div>
+          <h3 className="mb-1.5 text-[15px] font-medium text-white">No Actions Pending</h3>
+          <p className="mx-auto max-w-sm text-[13px] text-[var(--text-secondary)]">
+            Run an analysis from the Dashboard to generate recommended actions.
+          </p>
+        </div>
       ) : (
-        <>
-          <div className="glass mb-8 rounded-[24px] p-6 sm:p-8 fade-up">
+        <div className="space-y-6">
+          <div className="rounded-xl border border-[var(--border-subtle)] bg-[var(--surface-raised)] p-5 sm:p-6">
             <div className="mb-4 flex items-end justify-between">
               <div>
-                <p className="text-sm font-medium uppercase tracking-widest text-[var(--text-muted)]">
+                <p className="text-[12px] font-medium text-[var(--text-secondary)]">
                   Execution Progress
                 </p>
-                <p className="mt-1 text-sm text-[var(--text-faint)]">
+                <p className="mt-0.5 text-[14px] text-white">
                   {completedCount} of {actions.length} tasks completed
                 </p>
               </div>
-              <p className="text-3xl font-bold tracking-tight text-indigo-400">
+              <p className="text-2xl font-bold tracking-tight text-[var(--accent)]">
                 {progress}%
               </p>
             </div>
 
-            <div className="h-4 overflow-hidden rounded-full bg-white/[0.06]">
+            <div className="h-2 overflow-hidden rounded-full bg-white/[0.06]">
               <div
-                className="h-full rounded-full bg-gradient-to-r from-cyan-400 to-indigo-500 transition-all duration-700 ease-out"
+                className="h-full rounded-full bg-[var(--accent)] transition-all duration-700 ease-out"
                 style={{ width: `${progress}%` }}
               />
             </div>
           </div>
 
-          <div className="space-y-4">
+          <div className="overflow-hidden rounded-xl border border-[var(--border-subtle)] bg-[var(--surface-raised)]">
             {actions.map((action, index) => {
-              // Simple heuristic to assign priority based on index (assuming AI orders by importance)
               const priority = index === 0 ? "High" : index < 3 ? "Medium" : "Low";
               const variant = priority === "High" ? "risk" : priority === "Medium" ? "warning" : "default";
 
               return (
                 <label
                   key={index}
-                  className={`glass group flex cursor-pointer items-start gap-4 rounded-[20px] p-5 transition-all duration-300 hover:-translate-y-0.5 sm:items-center sm:gap-6 sm:p-6 ${
-                    action.completed ? "opacity-60 grayscale" : "hover:border-indigo-500/30 hover:bg-white/[0.04]"
-                  }`}
-                  style={{ animationDelay: `${index * 50}ms` }}
+                  className={`group flex cursor-pointer items-start gap-4 px-5 py-4 transition-colors hover:bg-white/[0.02] sm:items-center ${
+                    index !== actions.length - 1 ? "border-b border-[var(--border-subtle)]" : ""
+                  } ${action.completed ? "opacity-60" : ""}`}
                 >
-                  <div className="relative flex h-6 w-6 shrink-0 items-center justify-center pt-1 sm:pt-0">
+                  <div className="relative flex h-5 w-5 shrink-0 items-center justify-center pt-0.5 sm:pt-0">
                     <input
                       type="checkbox"
                       checked={action.completed}
                       onChange={() => toggle(index)}
-                      className="peer absolute h-6 w-6 cursor-pointer opacity-0"
+                      className="peer absolute h-5 w-5 cursor-pointer opacity-0"
                     />
-                    <div className="pointer-events-none flex h-6 w-6 items-center justify-center rounded-lg border-2 border-[var(--border-strong)] transition-all peer-checked:border-indigo-500 peer-checked:bg-indigo-500">
-                      <svg className={`h-4 w-4 text-white transition-opacity ${action.completed ? "opacity-100" : "opacity-0"}`} viewBox="0 0 20 20" fill="currentColor">
+                    <div className="pointer-events-none flex h-5 w-5 items-center justify-center rounded-[4px] border border-[var(--border-strong)] transition-all peer-checked:border-[var(--accent)] peer-checked:bg-[var(--accent)]">
+                      <svg className={`h-3.5 w-3.5 text-white transition-opacity ${action.completed ? "opacity-100" : "opacity-0"}`} viewBox="0 0 20 20" fill="currentColor">
                         <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                       </svg>
                     </div>
@@ -123,8 +126,8 @@ export default function ActionsPage() {
 
                   <div className="flex flex-1 flex-col justify-between gap-3 sm:flex-row sm:items-center">
                     <span
-                      className={`text-[15px] transition-all duration-300 ${
-                        action.completed ? "text-[var(--text-faint)] line-through" : "text-white"
+                      className={`text-[14px] transition-all ${
+                        action.completed ? "text-[var(--text-tertiary)] line-through" : "text-white/90"
                       }`}
                     >
                       {action.text}
@@ -140,7 +143,7 @@ export default function ActionsPage() {
               );
             })}
           </div>
-        </>
+        </div>
       )}
     </>
   );

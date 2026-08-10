@@ -52,11 +52,11 @@ export default function Topbar({
     .toUpperCase();
 
   return (
-    <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-[var(--border-subtle)] bg-[var(--background)]/80 px-4 backdrop-blur-xl md:px-8">
-      <div className="flex items-center gap-4">
+    <header className="sticky top-0 z-30 flex h-[var(--topbar-height)] shrink-0 items-center justify-between border-b border-[var(--border-subtle)] bg-[var(--background)] px-4 md:px-6">
+      <div className="flex items-center gap-3">
         <button
           onClick={onMenuClick}
-          className="rounded-lg p-2 text-[var(--text-muted)] hover:bg-white/[0.05] hover:text-white lg:hidden"
+          className="rounded-md p-1.5 text-[var(--text-tertiary)] hover:bg-white/[0.04] hover:text-white lg:hidden"
           aria-label="Open menu"
         >
           <svg
@@ -70,30 +70,29 @@ export default function Topbar({
         </button>
       </div>
 
-      <div className="flex items-center gap-4">
-        <div className="flex items-center gap-3 rounded-full border border-[var(--border-subtle)] bg-[var(--surface-glass)] py-1 pl-1 pr-4 transition-colors hover:bg-white/[0.06]">
+      <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2.5">
           {avatar && !imgError ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
               src={avatar}
               onError={() => setImgError(true)}
-              className="h-8 w-8 rounded-full object-cover"
+              className="h-7 w-7 rounded-full object-cover"
               alt={`${name}'s profile`}
             />
           ) : (
-            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-indigo-500 text-xs font-medium text-white">
+            <div className="flex h-7 w-7 items-center justify-center rounded-full bg-[var(--accent)] text-[11px] font-medium text-white">
               {initials}
             </div>
           )}
-          <div className="flex items-center gap-3">
-            <span className="hidden text-sm font-medium sm:block">{name}</span>
-            <button
-              onClick={logout}
-              className="text-xs font-medium text-[var(--text-muted)] transition-colors hover:text-rose-400"
-            >
-              Logout
-            </button>
-          </div>
+          <span className="hidden text-[13px] font-medium text-[var(--text-secondary)] sm:block">{name}</span>
+          <button
+            onClick={logout}
+            className="ml-1 rounded-md px-2 py-1 text-[12px] font-medium text-[var(--text-tertiary)] transition-colors hover:text-rose-400"
+            aria-label="Log out"
+          >
+            Logout
+          </button>
         </div>
       </div>
     </header>

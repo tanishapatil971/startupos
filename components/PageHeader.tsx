@@ -6,16 +6,16 @@ type PageHeaderProps = {
 
 export default function PageHeader({ title, description, action }: PageHeaderProps) {
   return (
-    <div className="mb-8 flex flex-col items-start justify-between gap-4 md:flex-row md:items-end">
-      <div className="fade-up">
-        <h1 className="text-3xl font-bold tracking-tight text-white md:text-4xl">
+    <div className="mb-6 flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-end">
+      <div>
+        <h1 className="text-xl font-semibold tracking-tight text-white sm:text-2xl">
           {title}
         </h1>
-        <p className="mt-2 text-[15px] text-[var(--text-muted)]">
+        <p className="mt-1 text-[14px] text-[var(--text-secondary)]">
           {description}
         </p>
       </div>
-      {action && <div className="fade-up w-full md:w-auto" style={{ animationDelay: "50ms" }}>{action}</div>}
+      {action && <div className="w-full sm:w-auto">{action}</div>}
     </div>
   );
 }

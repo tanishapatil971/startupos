@@ -1,15 +1,38 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
+import { supabase } from "@/lib/supabase";
 import PageHeader from "@/components/PageHeader";
 
 export default function ChatPage() {
   const [messages, setMessages] = useState<
     { role: "user" | "assistant"; content: string }[]
   >([]);
-
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [companyName, setCompanyName] = useState<string | null>(null);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // Load company data for contextual prompts
+  useEffect(() => {
+    async function loadContext() {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      const { data } = await supabase
+        .from("companies")
+        .select("name")
+        .eq("user_id", user.id)
+        .single();
+      if (data) setCompanyName(data.name);
+    }
+    loadContext();
+  }, []);
+
+  // Auto-scroll on new messages
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages, loading]);
 
   const suggestedPrompts = [
     "What is the biggest risk in my current strategy?",
@@ -19,7 +42,7 @@ export default function ChatPage() {
   ];
 
   async function sendMessage(text = input) {
-    if (!text.trim()) return;
+    if (!text.trim() || loading) return;
 
     const userMessage = {
       role: "user" as const,
@@ -29,6 +52,7 @@ export default function ChatPage() {
     setMessages((prev) => [...prev, userMessage]);
     setInput("");
     setLoading(true);
+    setError(null);
 
     try {
       const response = await fetch("/api/chat", {
@@ -41,6 +65,10 @@ export default function ChatPage() {
         }),
       });
 
+      if (!response.ok) {
+        throw new Error(`Request failed (${response.status})`);
+      }
+
       const data = await response.json();
 
       setMessages((prev) => [
@@ -50,12 +78,14 @@ export default function ChatPage() {
           content: data.reply,
         },
       ]);
-    } catch {
+    } catch (err) {
+      const errMsg = err instanceof Error ? err.message : "Something went wrong.";
+      setError(errMsg);
       setMessages((prev) => [
         ...prev,
         {
           role: "assistant",
-          content: "Something went wrong.",
+          content: "Sorry, something went wrong. Please try again.",
         },
       ]);
     } finally {
@@ -63,33 +93,58 @@ export default function ChatPage() {
     }
   }
 
+  function retryLast() {
+    // Find the last user message and resend
+    const lastUserMsg = [...messages].reverse().find((m) => m.role === "user");
+    if (!lastUserMsg) return;
+    // Remove the failed assistant response
+    setMessages((prev) => {
+      const newMsgs = [...prev];
+      if (newMsgs.length > 0 && newMsgs[newMsgs.length - 1].role === "assistant") {
+        newMsgs.pop();
+      }
+      // Also remove the user message since sendMessage will re-add it
+      if (newMsgs.length > 0 && newMsgs[newMsgs.length - 1].role === "user") {
+        newMsgs.pop();
+      }
+      return newMsgs;
+    });
+    setError(null);
+    sendMessage(lastUserMsg.content);
+  }
+
   return (
-    <>
-      <PageHeader 
-        title="AI Co-Founder" 
-        description="Your strategic startup advisor powered by AI." 
+    <div className="flex h-[calc(100vh-var(--topbar-height)-3rem)] flex-col sm:h-[calc(100vh-var(--topbar-height)-4rem)]">
+      <PageHeader
+        title="AI Chat"
+        description="Strategic startup advisor powered by AI."
       />
 
-      <div className="glass flex h-[600px] flex-col rounded-[24px] p-6 fade-up">
-        <div className="flex-1 overflow-y-auto space-y-6 pr-2">
+      {/* Chat container */}
+      <div className="flex min-h-0 flex-1 flex-col rounded-xl border border-[var(--border-subtle)] bg-[var(--surface-raised)]">
+        
+        {/* Messages area */}
+        <div className="flex-1 overflow-y-auto px-4 py-4 sm:px-6 sm:py-5">
           {messages.length === 0 ? (
-            <div className="flex h-full flex-col items-center justify-center p-8 text-center">
-              <div className="mb-6 rounded-full bg-indigo-500/10 p-4 text-indigo-400">
-                <svg className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+            <div className="flex h-full flex-col items-center justify-center px-4">
+              <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-lg bg-[var(--accent-subtle)]">
+                <svg className="h-5 w-5 text-[var(--accent)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
                 </svg>
               </div>
-              <h3 className="mb-2 text-lg font-medium text-white">How can I help you today?</h3>
-              <p className="mb-8 max-w-sm text-sm text-[var(--text-muted)]">
-                Ask me about growth, strategy, or have me challenge your assumptions.
+              <h3 className="mb-1 text-[15px] font-medium text-white">
+                {companyName ? `How can I help ${companyName}?` : "How can I help your startup?"}
+              </h3>
+              <p className="mb-6 max-w-md text-center text-[13px] text-[var(--text-secondary)]">
+                I can help with strategy, growth, market analysis, fundraising, product decisions, and challenging your assumptions. Ask me anything about your startup.
               </p>
               
-              <div className="grid w-full max-w-2xl gap-3 sm:grid-cols-2">
+              <div className="grid w-full max-w-lg gap-2 sm:grid-cols-2">
                 {suggestedPrompts.map((prompt) => (
                   <button
                     key={prompt}
                     onClick={() => sendMessage(prompt)}
-                    className="flex text-left items-center rounded-xl border border-white/5 bg-white/[0.02] p-4 text-sm text-[var(--text-muted)] transition-all hover:bg-white/[0.06] hover:text-white"
+                    className="rounded-lg border border-[var(--border-subtle)] bg-[var(--surface)] px-3.5 py-2.5 text-left text-[13px] text-[var(--text-secondary)] transition-colors hover:border-[var(--accent)]/30 hover:text-white"
                   >
                     {prompt}
                   </button>
@@ -97,58 +152,91 @@ export default function ChatPage() {
               </div>
             </div>
           ) : (
-            <>
+            <div className="space-y-4">
               {messages.map((message, index) => (
                 <div
                   key={index}
                   className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}
                 >
                   <div
-                    className={`max-w-[85%] rounded-2xl px-5 py-4 sm:max-w-[75%] ${
+                    className={`max-w-[85%] rounded-xl px-4 py-3 text-[14px] leading-relaxed sm:max-w-[72%] ${
                       message.role === "user"
-                        ? "bg-indigo-600 text-white"
-                        : "border border-white/10 bg-white/[0.04] text-gray-100"
+                        ? "bg-[var(--accent)] text-white"
+                        : "border border-[var(--border-subtle)] bg-[var(--surface)] text-[var(--text-primary)]"
                     }`}
                   >
-                    {message.content}
+                    {message.role === "assistant" && (
+                      <div className="mb-1 text-[11px] font-medium text-[var(--accent)]">StartupOS AI</div>
+                    )}
+                    <div className="whitespace-pre-wrap">{message.content}</div>
                   </div>
                 </div>
               ))}
+              
+              {/* Typing indicator */}
               {loading && (
                 <div className="flex justify-start">
-                  <div className="max-w-[85%] rounded-2xl border border-white/10 bg-white/[0.04] px-5 py-4 text-[var(--text-muted)] sm:max-w-[75%]">
-                    <span className="flex items-center gap-2">
-                      <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-indigo-400" />
-                      <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-indigo-400" style={{ animationDelay: "0.2s" }} />
-                      <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-indigo-400" style={{ animationDelay: "0.4s" }} />
+                  <div className="rounded-xl border border-[var(--border-subtle)] bg-[var(--surface)] px-4 py-3">
+                    <div className="mb-1 text-[11px] font-medium text-[var(--accent)]">StartupOS AI</div>
+                    <span className="flex items-center gap-1.5">
+                      <span className="h-1.5 w-1.5 rounded-full bg-[var(--accent)] typing-dot" />
+                      <span className="h-1.5 w-1.5 rounded-full bg-[var(--accent)] typing-dot" />
+                      <span className="h-1.5 w-1.5 rounded-full bg-[var(--accent)] typing-dot" />
                     </span>
                   </div>
                 </div>
               )}
-            </>
+
+              {/* Error/retry */}
+              {error && !loading && (
+                <div className="flex justify-center">
+                  <button
+                    onClick={retryLast}
+                    className="rounded-lg border border-rose-500/20 bg-rose-500/10 px-3 py-1.5 text-[12px] font-medium text-rose-400 transition-colors hover:bg-rose-500/20"
+                  >
+                    Request failed — Retry
+                  </button>
+                </div>
+              )}
+
+              <div ref={messagesEndRef} />
+            </div>
           )}
         </div>
 
-        <div className="mt-6 flex gap-3 sm:gap-4">
-          <input
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") sendMessage();
-            }}
-            disabled={loading}
-            placeholder="Ask your AI co-founder..."
-            className="flex-1 rounded-2xl border border-[var(--border-subtle)] bg-white/[0.03] px-4 py-3.5 text-[15px] outline-none transition-colors focus:border-indigo-500/50 disabled:opacity-50"
-          />
-          <button
-            onClick={() => sendMessage()}
-            disabled={loading || !input.trim()}
-            className="flex items-center justify-center rounded-2xl bg-indigo-500 px-6 font-medium text-white transition-all hover:bg-indigo-600 disabled:opacity-50 disabled:hover:bg-indigo-500 sm:px-8"
-          >
-            Send
-          </button>
+        {/* Composer */}
+        <div className="border-t border-[var(--border-subtle)] px-4 py-3 sm:px-6">
+          <div className="flex gap-2">
+            <input
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && !e.shiftKey) {
+                  e.preventDefault();
+                  sendMessage();
+                }
+              }}
+              disabled={loading}
+              placeholder="Ask your AI advisor..."
+              className="flex-1 rounded-lg border border-[var(--border-subtle)] bg-white/[0.03] px-3.5 py-2.5 text-[14px] outline-none transition-colors placeholder:text-[var(--text-tertiary)] focus:border-[var(--accent)]/50 disabled:opacity-50"
+              id="chat-input"
+              aria-label="Chat message input"
+            />
+            <button
+              onClick={() => sendMessage()}
+              disabled={loading || !input.trim()}
+              className="flex items-center justify-center rounded-lg bg-[var(--accent)] px-4 text-[13px] font-medium text-white transition-colors hover:bg-[var(--accent-hover)] disabled:opacity-50 disabled:hover:bg-[var(--accent)] sm:px-6"
+              aria-label="Send message"
+              id="chat-send-btn"
+            >
+              <svg className="h-4 w-4 sm:hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+              </svg>
+              <span className="hidden sm:inline">Send</span>
+            </button>
+          </div>
         </div>
       </div>
-    </>
+    </div>
   );
 }

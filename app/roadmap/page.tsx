@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import PageHeader from "@/components/PageHeader";
-import EmptyState from "@/components/EmptyState";
 import Badge from "@/components/Badge";
 
 export default function RoadmapPage() {
@@ -34,7 +33,7 @@ export default function RoadmapPage() {
   if (loading) {
     return (
       <div className="flex min-h-[50vh] items-center justify-center">
-        <div className="h-6 w-6 animate-spin rounded-full border-2 border-indigo-500/30 border-t-indigo-500" />
+        <div className="h-5 w-5 animate-spin rounded-full border-2 border-[var(--accent)]/30 border-t-[var(--accent)]" />
       </div>
     );
   }
@@ -47,34 +46,42 @@ export default function RoadmapPage() {
       />
 
       {roadmap.length === 0 ? (
-        <EmptyState
-          title="No Roadmap Generated"
-          description="Run an analysis in the Command Center to generate a strategic timeline."
-          icon="🗺️"
-        />
+        <div className="rounded-xl border border-[var(--border-subtle)] bg-[var(--surface-raised)] p-8 text-center sm:p-12">
+          <div className="mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-lg bg-[var(--accent-subtle)]">
+            <svg className="h-5 w-5 text-[var(--accent)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+            </svg>
+          </div>
+          <h3 className="mb-1.5 text-[15px] font-medium text-white">No Roadmap Generated</h3>
+          <p className="mx-auto max-w-sm text-[13px] text-[var(--text-secondary)]">
+            Run an analysis from the Dashboard to generate a strategic timeline.
+          </p>
+        </div>
       ) : (
-        <div className="relative space-y-6 before:absolute before:inset-y-0 before:left-[35px] before:w-[2px] before:bg-white/[0.05]">
+        <div className="overflow-hidden rounded-xl border border-[var(--border-subtle)] bg-[var(--surface-raised)]">
           {roadmap.map((item, index) => (
             <div
               key={index}
-              className="glass relative z-10 flex flex-col gap-5 rounded-[24px] p-6 transition-all duration-300 hover:-translate-y-1 hover:border-indigo-500/30 sm:flex-row sm:items-center sm:justify-between"
+              className={`flex flex-col gap-4 px-5 py-4 sm:flex-row sm:items-center sm:justify-between ${
+                index !== roadmap.length - 1 ? "border-b border-[var(--border-subtle)]" : ""
+              }`}
             >
-              <div className="flex items-start gap-6">
-                <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-indigo-500/10 text-lg font-bold text-indigo-400 ring-4 ring-[var(--background)]">
+              <div className="flex items-center gap-4">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[var(--accent-subtle)] text-[13px] font-bold text-[var(--accent)]">
                   {index + 1}
                 </div>
 
                 <div>
-                  <p className="text-xs font-semibold uppercase tracking-wider text-indigo-400">
+                  <p className="text-[11px] font-semibold uppercase tracking-wider text-[var(--text-secondary)]">
                     {item.week}
                   </p>
-                  <h2 className="mt-1 text-xl font-semibold text-white">
+                  <h2 className="mt-0.5 text-[15px] font-medium text-white">
                     {item.title}
                   </h2>
                 </div>
               </div>
 
-              <div className="pl-[80px] sm:pl-0">
+              <div className="pl-14 sm:pl-0">
                 <Badge variant="default">{item.status}</Badge>
               </div>
             </div>

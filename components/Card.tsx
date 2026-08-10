@@ -1,25 +1,29 @@
 import { ReactNode } from "react";
 
 type CardProps = {
-  title: string;
+  title?: string;
   children: ReactNode;
   action?: ReactNode;
   className?: string;
+  padding?: "default" | "compact" | "none";
 };
 
-export default function Card({ title, children, action, className = "" }: CardProps) {
+export default function Card({ title, children, action, className = "", padding = "default" }: CardProps) {
+  const padClass = padding === "none" ? "" : padding === "compact" ? "p-4 sm:p-5" : "p-5 sm:p-6";
+
   return (
-    <div className={`glass relative flex h-full flex-col rounded-[20px] p-6 transition-all duration-300 ease-out hover:-translate-y-1 hover:border-white/[0.14] hover:bg-white/[0.04] sm:p-7 fade-up ${className}`}>
-      <div className="mb-4 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <span className="h-1.5 w-1.5 rounded-full bg-indigo-500" />
-          <h2 className="text-[11px] font-medium uppercase tracking-[0.14em] text-[var(--text-muted)]">
+    <div
+      className={`relative flex h-full flex-col rounded-xl border border-[var(--border-subtle)] bg-[var(--surface-raised)] ${padClass} ${className}`}
+    >
+      {title && (
+        <div className="mb-3 flex items-center justify-between">
+          <h2 className="text-[13px] font-medium text-[var(--text-secondary)]">
             {title}
           </h2>
+          {action && <div>{action}</div>}
         </div>
-        {action && <div>{action}</div>}
-      </div>
-      <div className="flex-1 text-[15px] leading-relaxed text-[var(--foreground)]">
+      )}
+      <div className="flex-1 text-[14px] leading-relaxed text-[var(--text-primary)]">
         {children}
       </div>
     </div>

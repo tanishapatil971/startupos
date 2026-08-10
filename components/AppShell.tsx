@@ -25,7 +25,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
           <Topbar onMenuClick={() => setIsSidebarOpen(true)} />
           
           <main className="flex-1 overflow-x-hidden overflow-y-auto">
-            <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 md:py-10 lg:px-8">
+            <div className="mx-auto w-full max-w-[var(--content-max-width)] px-4 py-6 sm:px-6 md:py-8">
               {children}
             </div>
           </main>
