@@ -1,6 +1,7 @@
 import { GoogleGenAI } from "@google/genai";
 import { createClient } from "@/lib/supabase-server";
 import { NextResponse } from "next/server";
+import { checkRateLimit } from "@/lib/rate-limit";
 
 const ai = new GoogleGenAI({
   apiKey: process.env.GEMINI_API_KEY!,
@@ -13,6 +14,19 @@ export async function POST(request: Request) {
 
     if (!user) {
       return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
+    }
+
+    const { success: rateLimitSuccess, reset } = await checkRateLimit(user.id, "analyze");
+    if (!rateLimitSuccess) {
+      return NextResponse.json(
+        { success: false, error: "Too Many Requests" },
+        { 
+          status: 429, 
+          headers: {
+            "Retry-After": Math.ceil((reset - Date.now()) / 1000).toString(),
+          }
+        }
+      );
     }
 
     const body = await request.json();

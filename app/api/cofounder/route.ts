@@ -1,6 +1,7 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase-server";
+import { checkRateLimit } from "@/lib/rate-limit";
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
 
@@ -11,6 +12,19 @@ export async function POST(req: Request) {
 
     if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const { success: rateLimitSuccess, reset } = await checkRateLimit(user.id, "cofounder");
+    if (!rateLimitSuccess) {
+      return NextResponse.json(
+        { error: "Too Many Requests" },
+        { 
+          status: 429, 
+          headers: {
+            "Retry-After": Math.ceil((reset - Date.now()) / 1000).toString(),
+          }
+        }
+      );
     }
 
     const { prompt } = await req.json();
