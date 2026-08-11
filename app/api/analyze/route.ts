@@ -1,4 +1,6 @@
 import { GoogleGenAI } from "@google/genai";
+import { createClient } from "@/lib/supabase-server";
+import { NextResponse } from "next/server";
 
 const ai = new GoogleGenAI({
   apiKey: process.env.GEMINI_API_KEY!,
@@ -6,7 +8,19 @@ const ai = new GoogleGenAI({
 
 export async function POST(request: Request) {
   try {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (!user) {
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
+    }
+
     const body = await request.json();
+    
+    // Add basic rate-limit simulation/protection or just input validation
+    if (!body.goal || !body.context) {
+       return NextResponse.json({ success: false, error: "Missing required fields" }, { status: 400 });
+    }
 
     const response = await ai.models.generateContent({
       model: "gemini-2.5-flash",
@@ -14,10 +28,10 @@ export async function POST(request: Request) {
 You are an expert startup advisor.
 
 Startup Goal:
-${body.goal}
+${body.goal.substring(0, 2000)}
 
 Startup Context:
-${body.context}
+${body.context.substring(0, 5000)}
 
 Return ONLY valid JSON in this exact format:
 
@@ -48,16 +62,6 @@ Return ONLY valid JSON in this exact format:
       "week": "Week 2",
       "title": "...",
       "status": "Pending"
-    },
-    {
-      "week": "Week 3",
-      "title": "...",
-      "status": "Pending"
-    },
-    {
-      "week": "Week 4",
-      "title": "...",
-      "status": "Goal"
     }
   ]
 }
@@ -71,14 +75,15 @@ Rules:
 
     const analysis = JSON.parse(response.text || "{}");
 
-    return Response.json({
+    return NextResponse.json({
       success: true,
       analysis,
     });
   } catch (error) {
-    return Response.json({
+    console.error("Analysis Error");
+    return NextResponse.json({
       success: false,
-      error: String(error),
-    });
+      error: "Internal Server Error",
+    }, { status: 500 });
   }
 }

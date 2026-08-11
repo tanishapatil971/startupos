@@ -1,4 +1,6 @@
 import { GoogleGenAI } from "@google/genai";
+import { createClient } from "@/lib/supabase-server";
+import { NextResponse } from "next/server";
 
 const ai = new GoogleGenAI({
   apiKey: process.env.GEMINI_API_KEY!,
@@ -6,7 +8,19 @@ const ai = new GoogleGenAI({
 
 export async function POST(request: Request) {
   try {
-    const { message } = await request.json();
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (!user) {
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
+    }
+
+    const body = await request.json();
+    const message = body.message;
+    
+    if (!message || typeof message !== "string") {
+       return NextResponse.json({ success: false, error: "Invalid message" }, { status: 400 });
+    }
 
     const response = await ai.models.generateContent({
       model: "gemini-2.5-flash",
@@ -18,18 +32,19 @@ Answer like an experienced startup founder.
 Keep answers practical, concise, and actionable.
 
 Founder Question:
-${message}
+${message.substring(0, 1000)}
 `,
     });
 
-    return Response.json({
+    return NextResponse.json({
       success: true,
       reply: response.text,
     });
   } catch (error) {
-    return Response.json({
+    console.error("Chat Error");
+    return NextResponse.json({
       success: false,
-      error: String(error),
-    });
+      error: "Internal Server Error",
+    }, { status: 500 });
   }
 }

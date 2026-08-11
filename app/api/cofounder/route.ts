@@ -1,61 +1,39 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { NextResponse } from "next/server";
+import { createClient } from "@/lib/supabase-server";
 
-const genAI =
-  new GoogleGenerativeAI(
-    process.env.GEMINI_API_KEY!
-  );
-
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
 
 export async function POST(req: Request) {
-
   try {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
 
-    const { prompt } =
-      await req.json();
+    if (!user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
 
+    const { prompt } = await req.json();
 
-    const model =
-      genAI.getGenerativeModel({
-        model: "gemini-2.5-flash",
-      });
+    if (!prompt || typeof prompt !== "string") {
+      return NextResponse.json({ error: "Invalid prompt" }, { status: 400 });
+    }
 
-
-
-    const result =
-      await model.generateContent(prompt);
-
-
-    const response =
-      result.response.text();
-
-
-
-    return NextResponse.json({
-
-      answer: response,
-
+    const model = genAI.getGenerativeModel({
+      model: "gemini-2.5-flash",
     });
 
+    const result = await model.generateContent(prompt.substring(0, 1000));
+    const response = result.response.text();
 
-  }
-
-
-  catch (error) {
-
-    console.log(error);
-
-
+    return NextResponse.json({
+      answer: response,
+    });
+  } catch (error) {
+    console.error("Cofounder API Error");
     return NextResponse.json(
-      {
-        error:
-          "AI Cofounder failed",
-      },
-      {
-        status: 500,
-      }
+      { error: "Internal Server Error" },
+      { status: 500 }
     );
-
   }
-
 }
