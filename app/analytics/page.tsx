@@ -5,8 +5,19 @@ import { supabase } from "@/lib/supabase";
 import PageHeader from "@/components/PageHeader";
 import Badge from "@/components/Badge";
 
+interface Report {
+  id: string;
+  user_id: string;
+  goal: string;
+  health_score: number;
+  risks: string[] | null;
+  opportunities: string[] | null;
+  next_actions: string[] | null;
+  created_at: string;
+}
+
 export default function AnalyticsPage() {
-  const [reports, setReports] = useState<any[]>([]);
+  const [reports, setReports] = useState<Report[]>([]);
   const [loading, setLoading] = useState(true);
   const healthCanvasRef = useRef<HTMLCanvasElement>(null);
   const riskCanvasRef = useRef<HTMLCanvasElement>(null);
@@ -37,8 +48,7 @@ export default function AnalyticsPage() {
     canvas: HTMLCanvasElement,
     dataPoints: { value: number; date: Date }[],
     color: string,
-    maxVal: number,
-    label: string
+    maxVal: number
   ) {
     const ctx = canvas.getContext("2d");
     if (!ctx || dataPoints.length === 0) return;
@@ -150,8 +160,7 @@ export default function AnalyticsPage() {
         healthCanvasRef.current,
         chronological.map((r) => ({ value: r.health_score, date: new Date(r.created_at) })),
         "rgba(99, 102, 241, 1)",
-        100,
-        "Health"
+        100
       );
     }
 
@@ -160,8 +169,7 @@ export default function AnalyticsPage() {
         riskCanvasRef.current,
         chronological.map((r) => ({ value: r.risks?.length ?? 0, date: new Date(r.created_at) })),
         "rgba(239, 68, 68, 1)",
-        Math.max(...chronological.map((r) => r.risks?.length ?? 0), 5),
-        "Risks"
+        Math.max(...chronological.map((r) => r.risks?.length ?? 0), 5)
       );
     }
   }, [reports]);

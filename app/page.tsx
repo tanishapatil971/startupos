@@ -6,12 +6,31 @@ import { supabase } from "@/lib/supabase";
 import PageHeader from "@/components/PageHeader";
 import Badge from "@/components/Badge";
 
+interface RoadmapItem {
+  week: string;
+  title: string;
+  status: string;
+}
+
+interface Report {
+  id: string;
+  user_id: string;
+  goal: string;
+  health_score: number;
+  risks: string[] | null;
+  opportunities: string[] | null;
+  next_actions: string[] | null;
+  roadmap: RoadmapItem[] | null;
+  created_at: string;
+}
+
 export default function Home() {
-  const [report, setReport] = useState<any>(null);
-  const [allReports, setAllReports] = useState<any[]>([]);
+  const [report, setReport] = useState<Report | null>(null);
+  const [allReports, setAllReports] = useState<Report[]>([]);
   const [context, setContext] = useState("");
   const [goal, setGoal] = useState("");
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [fetchingInitial, setFetchingInitial] = useState(true);
   const trendCanvasRef = useRef<HTMLCanvasElement>(null);
 
@@ -86,7 +105,7 @@ export default function Home() {
     }
 
     // Map data points
-    const points = data.map((r: any, i: number) => ({
+    const points = data.map((r, i) => ({
       x: paddingLeft + (data.length === 1 ? chartW / 2 : (i / (data.length - 1)) * chartW),
       y: paddingTop + chartH - (Math.min(Math.max(r.health_score, 0), 100) / 100) * chartH,
       score: r.health_score,
@@ -156,6 +175,7 @@ export default function Home() {
   const analyzeStartup = async () => {
     try {
       setLoading(true);
+      setError(null);
 
       const response = await fetch("/api/analyze", {
         method: "POST",
@@ -163,10 +183,15 @@ export default function Home() {
         body: JSON.stringify({ goal, context }),
       });
 
-      const data = await response.json();
-      if (!data.success) {
-        console.error(data.error);
-        return;
+      let data;
+      try {
+        data = await response.json();
+      } catch {
+        throw new Error("Failed to connect to the server.");
+      }
+
+      if (!response.ok || !data.success) {
+        throw new Error(data.error || "Failed to analyze startup.");
       }
 
       const { data: { user } } = await supabase.auth.getUser();
@@ -195,6 +220,7 @@ export default function Home() {
       }
     } catch (err) {
       console.error(err);
+      setError(err instanceof Error ? err.message : "An unexpected error occurred.");
     } finally {
       setLoading(false);
     }
@@ -264,6 +290,12 @@ export default function Home() {
               {loading ? "Analyzing..." : "Run Analysis"}
             </button>
           </div>
+          {error && (
+            <div className="mt-2 rounded-lg border border-rose-500/20 bg-rose-500/10 px-4 py-3 text-[13px] text-rose-400">
+              <p className="font-medium">Analysis failed</p>
+              <p className="mt-0.5 opacity-90">{error}</p>
+            </div>
+          )}
         </div>
       </section>
 
@@ -374,11 +406,11 @@ export default function Home() {
             <h2 className="mb-3 text-[13px] font-medium text-[var(--text-secondary)]">Recommended Actions</h2>
             {report.next_actions && report.next_actions.length > 0 ? (
               <div className="overflow-hidden rounded-xl border border-[var(--border-subtle)]">
-                {report.next_actions.map((action: string, i: number) => (
+                {report.next_actions?.map((action: string, i: number) => (
                   <div
                     key={i}
                     className={`flex items-start gap-3.5 px-5 py-3.5 ${
-                      i !== report.next_actions.length - 1 ? "border-b border-[var(--border-subtle)]" : ""
+                      i !== (report.next_actions?.length ?? 0) - 1 ? "border-b border-[var(--border-subtle)]" : ""
                     } ${i === 0 ? "bg-[var(--surface-raised)]" : "bg-[var(--surface)]"}`}
                   >
                     <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-md bg-[var(--accent-subtle)] text-[11px] font-bold text-[var(--accent)]">
@@ -426,7 +458,7 @@ export default function Home() {
             <section aria-label="Recent intelligence">
               <h2 className="mb-3 text-[13px] font-medium text-[var(--text-secondary)]">Recent Intelligence</h2>
               <div className="space-y-2">
-                {allReports.slice(0, 3).map((r: any, i: number) => (
+                {allReports.slice(0, 3).map((r) => (
                   <Link
                     key={r.id}
                     href={`/reports/${r.id}`}

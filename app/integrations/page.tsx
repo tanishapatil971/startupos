@@ -3,15 +3,39 @@
 import { useState } from "react";
 import { supabase } from "@/lib/supabase";
 
+interface GoogleTokenResponse {
+  access_token: string;
+}
+
+interface GoogleOAuthClient {
+  requestAccessToken: () => void;
+}
+
 declare global {
   interface Window {
-    google: any;
+    google: {
+      accounts: {
+        oauth2: {
+          initTokenClient: (config: {
+            client_id: string;
+            scope: string;
+            callback: (response: GoogleTokenResponse) => Promise<void> | void;
+          }) => GoogleOAuthClient;
+        };
+      };
+    };
   }
+}
+
+interface GoogleDriveFile {
+  id: string;
+  name: string;
+  mimeType: string;
 }
 
 export default function IntegrationsPage() {
   const [connected, setConnected] = useState(false);
-  const [files, setFiles] = useState<any[]>([]);
+  const [files, setFiles] = useState<GoogleDriveFile[]>([]);
   const [accessToken, setAccessToken] = useState("");
   const [documentText, setDocumentText] = useState("");
   const [loading, setLoading] = useState(false);
@@ -28,7 +52,7 @@ export default function IntegrationsPage() {
         scope:
           "https://www.googleapis.com/auth/drive.readonly https://www.googleapis.com/auth/documents.readonly https://www.googleapis.com/auth/spreadsheets.readonly",
 
-        callback: async (response: any) => {
+        callback: async (response: GoogleTokenResponse) => {
 
 
           setAccessToken(response.access_token);
@@ -65,7 +89,7 @@ export default function IntegrationsPage() {
 
 
 
-  async function readWorkspaceFile(file: any) {
+  async function readWorkspaceFile(file: GoogleDriveFile) {
 
     console.log(
       "Selected file:",

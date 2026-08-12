@@ -6,8 +6,26 @@ import { supabase } from "@/lib/supabase";
 import PageHeader from "@/components/PageHeader";
 import Badge from "@/components/Badge";
 
+interface RoadmapItem {
+  week: string;
+  title: string;
+  status: string;
+}
+
+interface Report {
+  id: string;
+  user_id: string;
+  goal: string;
+  health_score: number;
+  risks: string[] | null;
+  opportunities: string[] | null;
+  next_actions: string[] | null;
+  roadmap: RoadmapItem[] | null;
+  created_at: string;
+}
+
 export default function ReportsPage() {
-  const [reports, setReports] = useState<any[]>([]);
+  const [reports, setReports] = useState<Report[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {

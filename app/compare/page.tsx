@@ -5,10 +5,28 @@ import { supabase } from "@/lib/supabase";
 import PageHeader from "@/components/PageHeader";
 import Badge from "@/components/Badge";
 
+interface RoadmapItem {
+  week: string;
+  title: string;
+  status: string;
+}
+
+interface Report {
+  id: string;
+  user_id: string;
+  goal: string;
+  health_score: number;
+  risks: string[] | null;
+  opportunities: string[] | null;
+  next_actions: string[] | null;
+  roadmap: RoadmapItem[] | null;
+  created_at: string;
+}
+
 export default function ComparePage() {
-  const [reports, setReports] = useState<any[]>([]);
-  const [first, setFirst] = useState<any>(null);
-  const [second, setSecond] = useState<any>(null);
+  const [reports, setReports] = useState<Report[]>([]);
+  const [first, setFirst] = useState<Report | null>(null);
+  const [second, setSecond] = useState<Report | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -76,7 +94,7 @@ export default function ComparePage() {
           <select
             className="w-full rounded-lg border border-[var(--border-subtle)] bg-[var(--surface)] px-3 py-2 text-[14px] text-white outline-none transition-colors focus:border-[var(--accent)]/50"
             value={first?.id || ""}
-            onChange={(e) => setFirst(reports.find((r) => r.id.toString() === e.target.value))}
+            onChange={(e) => setFirst(reports.find((r) => r.id.toString() === e.target.value) ?? null)}
           >
             <option value="" disabled className="bg-slate-900 text-white">Select Report</option>
             {reports.map((r) => (
@@ -94,7 +112,7 @@ export default function ComparePage() {
           <select
             className="w-full rounded-lg border border-[var(--border-subtle)] bg-[var(--surface)] px-3 py-2 text-[14px] text-white outline-none transition-colors focus:border-[var(--accent)]/50"
             value={second?.id || ""}
-            onChange={(e) => setSecond(reports.find((r) => r.id.toString() === e.target.value))}
+            onChange={(e) => setSecond(reports.find((r) => r.id.toString() === e.target.value) ?? null)}
           >
             <option value="" disabled className="bg-slate-900 text-white">Select Report</option>
             {reports.map((r) => (

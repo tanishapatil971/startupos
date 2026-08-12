@@ -6,10 +6,28 @@ import { supabase } from "@/lib/supabase";
 import PageHeader from "@/components/PageHeader";
 import Badge from "@/components/Badge";
 
+interface RoadmapItem {
+  week: string;
+  title: string;
+  status: string;
+}
+
+interface Report {
+  id: string;
+  user_id: string;
+  goal: string;
+  health_score: number;
+  risks: string[] | null;
+  opportunities: string[] | null;
+  next_actions: string[] | null;
+  roadmap: RoadmapItem[] | null;
+  created_at: string;
+}
+
 export default function ReportDetailPage() {
   const { id } = useParams();
   const router = useRouter();
-  const [report, setReport] = useState<any>(null);
+  const [report, setReport] = useState<Report | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -148,9 +166,9 @@ export default function ReportDetailPage() {
           <h2 className="mb-3 text-[13px] font-medium text-[var(--text-secondary)]">Recommended Actions</h2>
           {report.next_actions && report.next_actions.length > 0 ? (
             <div className="overflow-hidden rounded-xl border border-[var(--border-subtle)]">
-              {report.next_actions.map((action: string, i: number) => (
+              {report.next_actions?.map((action: string, i: number) => (
                 <div key={i} className={`flex items-start gap-3.5 px-5 py-3.5 ${
-                  i !== report.next_actions.length - 1 ? "border-b border-[var(--border-subtle)]" : ""
+                  i !== (report.next_actions?.length ?? 0) - 1 ? "border-b border-[var(--border-subtle)]" : ""
                 } bg-[var(--surface-raised)]`}>
                   <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-md bg-[var(--accent-subtle)] text-[11px] font-bold text-[var(--accent)]">
                     {i + 1}
@@ -171,9 +189,9 @@ export default function ReportDetailPage() {
           <div>
             <h2 className="mb-3 text-[13px] font-medium text-[var(--text-secondary)]">Roadmap</h2>
             <div className="overflow-hidden rounded-xl border border-[var(--border-subtle)]">
-              {report.roadmap.map((item: any, index: number) => (
+              {report.roadmap?.map((item, index: number) => (
                 <div key={index} className={`flex items-center justify-between gap-4 px-5 py-3.5 ${
-                  index !== report.roadmap.length - 1 ? "border-b border-[var(--border-subtle)]" : ""
+                  index !== (report.roadmap?.length ?? 0) - 1 ? "border-b border-[var(--border-subtle)]" : ""
                 } bg-[var(--surface-raised)]`}>
                   <div>
                     <p className="text-[11px] font-semibold uppercase tracking-wider text-[var(--accent)]">{item.week}</p>

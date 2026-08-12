@@ -44,11 +44,22 @@ const ONBOARDING_STEPS = [
   },
 ];
 
+interface OnboardingForm {
+  name: string;
+  industry: string;
+  stage: string;
+  description: string;
+  target_customers: string;
+  business_model: string;
+  current_problem: string;
+  main_goal: string;
+}
+
 export default function OnboardingPage() {
   const router = useRouter();
   
   const [currentStep, setCurrentStep] = useState(0);
-  const [form, setForm] = useState({
+  const [form, setForm] = useState<OnboardingForm>({
     name: "",
     industry: "",
     stage: "",
@@ -69,12 +80,17 @@ export default function OnboardingPage() {
     const saved = localStorage.getItem("startupos_onboarding");
     if (saved) {
       try {
-        setForm(JSON.parse(saved));
-      } catch (e) {
+        const parsed = JSON.parse(saved);
+        setTimeout(() => {
+          setForm(parsed);
+        }, 0);
+      } catch {
         // ignore parsing error
       }
     }
-    setIsLoaded(true);
+    setTimeout(() => {
+      setIsLoaded(true);
+    }, 0);
   }, []);
 
   // Auto-save on change
@@ -93,7 +109,7 @@ export default function OnboardingPage() {
     const stepDef = ONBOARDING_STEPS[currentStep];
     // Simple validation
     for (const field of stepDef.fields) {
-      if (!(form as any)[field.key].trim()) {
+      if (!form[field.key as keyof OnboardingForm].trim()) {
         setErrorMsg("Please fill out all fields to continue.");
         return;
       }
@@ -259,7 +275,7 @@ export default function OnboardingPage() {
                         {field.label}
                       </label>
                       <input
-                        value={(form as any)[field.key]}
+                        value={form[field.key as keyof OnboardingForm]}
                         onChange={(e) => handleChange(field.key, e.target.value)}
                         className="
                           w-full rounded-xl bg-white/[0.03] border border-white/10 

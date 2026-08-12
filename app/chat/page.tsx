@@ -66,7 +66,12 @@ export default function ChatPage() {
       });
 
       if (!response.ok) {
-        throw new Error(`Request failed (${response.status})`);
+        let errMsg = `Request failed (${response.status})`;
+        try {
+          const errData = await response.json();
+          if (errData.error) errMsg = errData.error;
+        } catch {}
+        throw new Error(errMsg);
       }
 
       const data = await response.json();

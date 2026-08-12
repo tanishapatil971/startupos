@@ -41,7 +41,7 @@ try {
       ephemeralCache: new Map(), // Use a local cache for faster subsequent requests
     });
   }
-} catch (error) {
+} catch {
   console.warn("Failed to initialize Upstash Redis rate limiter, using fallback.");
 }
 
@@ -52,7 +52,7 @@ export async function checkRateLimit(userId: string, endpoint: string) {
     try {
       const { success, reset } = await ratelimit.limit(identifier);
       return { success, reset };
-    } catch (error) {
+    } catch {
       console.warn("Upstash Redis rate limiting failed, falling back to in-memory limit.");
       // Fallback if Redis request fails
       return getFallbackRateLimit(identifier);

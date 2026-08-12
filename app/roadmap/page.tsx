@@ -5,8 +5,14 @@ import { supabase } from "@/lib/supabase";
 import PageHeader from "@/components/PageHeader";
 import Badge from "@/components/Badge";
 
+interface RoadmapItem {
+  week: string;
+  title: string;
+  status: string;
+}
+
 export default function RoadmapPage() {
-  const [roadmap, setRoadmap] = useState<any[]>([]);
+  const [roadmap, setRoadmap] = useState<RoadmapItem[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {

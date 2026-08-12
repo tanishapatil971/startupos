@@ -3,15 +3,22 @@
 import { useState } from "react";
 import { supabase } from "@/lib/supabase";
 
+interface Message {
+  role: "user" | "ai";
+  text: string;
+}
+
 export default function CofounderPage() {
   const [question, setQuestion] = useState("");
-  const [messages, setMessages] = useState<any[]>([]);
+  const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   async function askAI() {
-    if (!question.trim()) return;
+    if (!question.trim() || loading) return;
 
     setLoading(true);
+    setError(null);
 
     try {
       const {
@@ -138,6 +145,15 @@ Instructions:
         }),
       });
 
+      if (!response.ok) {
+        let errMsg = `Request failed (${response.status})`;
+        try {
+          const errData = await response.json();
+          if (errData.error) errMsg = errData.error;
+        } catch {}
+        throw new Error(errMsg);
+      }
+
       const result = await response.json();
 
       const answer = result.answer;
@@ -165,9 +181,10 @@ Instructions:
       setQuestion("");
     } catch (err) {
       console.error(err);
+      setError(err instanceof Error ? err.message : "An unexpected error occurred.");
+    } finally {
+      setLoading(false);
     }
-
-    setLoading(false);
   }
 
   return (
@@ -195,21 +212,38 @@ Instructions:
         ))}
       </div>
 
-      <div className="glass rounded-3xl p-5 flex gap-4">
-        <input
-          value={question}
-          onChange={(e) => setQuestion(e.target.value)}
-          placeholder="Ask your AI Cofounder..."
-          className="flex-1 bg-transparent outline-none"
-        />
+      <div className="glass rounded-3xl p-5 flex flex-col gap-4">
+        <div className="flex gap-4">
+          <input
+            value={question}
+            onChange={(e) => setQuestion(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && !e.shiftKey) {
+                e.preventDefault();
+                askAI();
+              }
+            }}
+            placeholder="Ask your AI Cofounder..."
+            className="flex-1 bg-transparent outline-none disabled:opacity-50"
+            disabled={loading}
+          />
 
-        <button
-          onClick={askAI}
-          disabled={loading}
-          className="rounded-xl bg-indigo-500 px-6 py-3 font-semibold disabled:opacity-50"
-        >
-          {loading ? "Thinking..." : "Ask"}
-        </button>
+          <button
+            onClick={askAI}
+            disabled={loading || !question.trim()}
+            className="rounded-xl bg-indigo-500 px-6 py-3 font-semibold disabled:opacity-50"
+          >
+            {loading ? "Thinking..." : "Ask"}
+          </button>
+        </div>
+        {error && (
+          <div className="rounded-xl bg-rose-500/10 px-4 py-3 text-sm text-rose-400 flex items-center justify-between">
+            <span>{error}</span>
+            <button onClick={askAI} className="underline font-medium hover:text-rose-300">
+              Try Again
+            </button>
+          </div>
+        )}
       </div>
     </main>
   );

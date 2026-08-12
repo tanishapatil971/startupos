@@ -44,9 +44,9 @@ export async function POST(req: Request) {
       answer: response,
     });
   } catch (error) {
-    console.error("Cofounder API Error");
+    console.error("Cofounder API Error:", error instanceof Error ? error.message : "Unknown error");
     return NextResponse.json(
-      { error: "Internal Server Error" },
+      { error: "AI Cofounder is temporarily unavailable." },
       { status: 500 }
     );
   }

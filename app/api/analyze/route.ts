@@ -94,10 +94,10 @@ Rules:
       analysis,
     });
   } catch (error) {
-    console.error("Analysis Error");
+    console.error("Analysis Error:", error instanceof Error ? error.message : "Unknown error");
     return NextResponse.json({
       success: false,
-      error: "Internal Server Error",
+      error: "Analysis failed. Please try again later.",
     }, { status: 500 });
   }
 }

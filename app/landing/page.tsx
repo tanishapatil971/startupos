@@ -366,7 +366,7 @@ function ProductDemo() {
           <SectionLabel>Live Product Experience</SectionLabel>
           <SectionHeading>Designed for founders, trusted by boards.</SectionHeading>
           <SectionSubtext style={{ maxWidth: 540, margin: "1rem auto 0" }}>
-            Experience StartupOS's active strategic engine. Autoplays through different views. Hover anywhere to pause and interact manually.
+            Experience StartupOS&apos;s active strategic engine. Autoplays through different views. Hover anywhere to pause and interact manually.
           </SectionSubtext>
         </div>
       </ScrollReveal>
@@ -475,7 +475,7 @@ function ProductDemo() {
                     return (
                       <button
                         key={tab.id}
-                        onClick={() => setActiveTab(tab.id as any)}
+                        onClick={() => setActiveTab(tab.id as "analysis" | "roadmap" | "chat")}
                         style={{
                           display: "flex",
                           alignItems: "center",
@@ -558,17 +558,18 @@ function ProductDemo() {
 /* ────────────────────────────────────────────────────────────────────────
    SUB-COMPONENT: TAB 1: DEMO ANALYSIS
 ──────────────────────────────────────────────────────────────────────── */
+const DEMO_ANALYSIS_STEPS = [64, 72, 81, 87, 91];
+
 function DemoAnalysis({ isActive }: { isActive: boolean }) {
   const [score, setScore] = useState(64);
-  const steps = [64, 72, 81, 87, 91];
 
   useEffect(() => {
     if (!isActive) return;
     let idx = 0;
     const interval = setInterval(() => {
-      if (idx < steps.length - 1) {
+      if (idx < DEMO_ANALYSIS_STEPS.length - 1) {
         idx++;
-        setScore(steps[idx]);
+        setScore(DEMO_ANALYSIS_STEPS[idx]);
       } else {
         clearInterval(interval);
       }
@@ -748,7 +749,7 @@ function DemoAnalysis({ isActive }: { isActive: boolean }) {
 /* ────────────────────────────────────────────────────────────────────────
    SUB-COMPONENT: TAB 2: DEMO ROADMAP
 ──────────────────────────────────────────────────────────────────────── */
-function DemoRoadmap({ isActive }: { isActive: boolean }) {
+function DemoRoadmap(_props: { isActive: boolean }) {
   const milestones = [
     { week: "Week 1–2", title: "Plug Onboarding Activation Leak", desc: "Redesign core flow, targets 40% conversion metrics. Direct interview on churn paths.", status: "completed" },
     { week: "Week 3–4", title: "Build Viral Growth Loops", desc: "Embed organic referral code flow inside the dashboard interface. Rewards system integration.", status: "current" },
@@ -843,40 +844,42 @@ function DemoRoadmap({ isActive }: { isActive: boolean }) {
 /* ────────────────────────────────────────────────────────────────────────
    SUB-COMPONENT: TAB 3: DEMO CHAT
 ──────────────────────────────────────────────────────────────────────── */
+const DEMO_FULL_CONVERSATION = [
+  { role: "user" as const, text: "Leads report our pricing tiers are hard to evaluate. Advice?" },
+  {
+    role: "ai" as const,
+    text: "Understood. The telemetry score shows pricing evaluate confusion has stalled 3 late-stage conversions.\n\nImmediate Action: Package into 3 explicit segments: Starter, Team, and Scale. Set a clear comparison block above the fold.\n\nNext Step: Run an automated post-demo email offering 14 days standard trial terms. Keep it frictionless.",
+  },
+];
+
 function DemoChat({ isActive }: { isActive: boolean }) {
   const [messages, setMessages] = useState<Array<{ role: "user" | "ai"; text: string }>>([]);
   const [isTyping, setIsTyping] = useState(false);
 
-  const fullConversation = [
-    { role: "user" as const, text: "Leads report our pricing tiers are hard to evaluate. Advice?" },
-    {
-      role: "ai" as const,
-      text: "Understood. The telemetry score shows pricing evaluate confusion has stalled 3 late-stage conversions.\n\nImmediate Action: Package into 3 explicit segments: Starter, Team, and Scale. Set a clear comparison block above the fold.\n\nNext Step: Run an automated post-demo email offering 14 days standard trial terms. Keep it frictionless.",
-    },
-  ];
-
   useEffect(() => {
     if (!isActive) {
-      setMessages([]);
-      setIsTyping(false);
-      return;
+      const resetTimer = setTimeout(() => {
+        setMessages([]);
+        setIsTyping(false);
+      }, 0);
+      return () => clearTimeout(resetTimer);
     }
 
-    let t1 = setTimeout(() => {
-      setMessages([fullConversation[0]]);
+    const t1 = setTimeout(() => {
+      setMessages([DEMO_FULL_CONVERSATION[0]]);
       setIsTyping(true);
     }, 800);
 
-    let t2 = setTimeout(() => {
+    const t2 = setTimeout(() => {
       setIsTyping(false);
-      setMessages([fullConversation[0], fullConversation[1]]);
+      setMessages([DEMO_FULL_CONVERSATION[0], DEMO_FULL_CONVERSATION[1]]);
     }, 3800);
 
     return () => {
       clearTimeout(t1);
       clearTimeout(t2);
     };
-  }, [isActive]);
+  }, [isActive]);
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "0.875rem", minHeight: "320px", maxHeight: "360px", overflowY: "auto", paddingRight: "0.25rem" }}>
@@ -1310,7 +1313,7 @@ function PrivacySection() {
         <ScrollReveal>
           <div style={{ textAlign: "center", marginBottom: "3.5rem" }}>
             <Tag color={t.emerald} icon={I.shield}>Privacy & Security</Tag>
-            <SectionHeading>You are sharing your startup's most sensitive ideas.</SectionHeading>
+            <SectionHeading>You are sharing your startup&apos;s most sensitive ideas.</SectionHeading>
             <SectionSubtext style={{ maxWidth: 540, margin: "1rem auto 0" }}>
               We designed StartupOS knowing that. Here is exactly how we handle your data — with no marketing language.
             </SectionSubtext>
@@ -1403,7 +1406,7 @@ function AICapabilities() {
             ))}
 
             <div style={{ padding: "0.75rem 1rem", borderRadius: 10, background: t.indigoSoft, border: `1px solid ${t.indigoBorder}`, fontSize: "0.8125rem", color: "#a5b4fc", lineHeight: 1.6 }}>
-              💡 The health score and all outputs update every time you run an analysis — giving you a live, comparable view of your startup's trajectory.
+              💡 The health score and all outputs update every time you run an analysis — giving you a live, comparable view of your startup&apos;s trajectory.
             </div>
           </div>
         </ScrollReveal>
@@ -1460,7 +1463,7 @@ function FAQSection() {
           <SectionLabel>FAQ</SectionLabel>
           <SectionHeading>Questions founders actually ask.</SectionHeading>
           <SectionSubtext style={{ maxWidth: 440, margin: "1rem auto 0" }}>
-            We've answered the real questions, not the marketing-friendly ones.
+            We&apos;ve answered the real questions, not the marketing-friendly ones.
           </SectionSubtext>
         </div>
       </ScrollReveal>
@@ -1650,7 +1653,7 @@ export default function LandingPage() {
           {/* Description */}
           <ScrollReveal delay={0.1}>
             <p style={{ fontSize: "clamp(1.0625rem, 2vw, 1.25rem)", lineHeight: 1.65, color: t.muted, maxWidth: 600, margin: "0 auto 2.75rem", letterSpacing: "-0.01em" }}>
-              StartupOS is the AI co-founder you don't have yet. It builds a persistent brain for your company, then gives you a clear strategic read — health score, risks, opportunities, and a prioritised action plan — every time you update your context.
+              StartupOS is the AI co-founder you don&apos;t have yet. It builds a persistent brain for your company, then gives you a clear strategic read — health score, risks, opportunities, and a prioritised action plan — every time you update your context.
             </p>
           </ScrollReveal>
 

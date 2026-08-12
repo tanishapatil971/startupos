@@ -55,10 +55,10 @@ ${message.substring(0, 1000)}
       reply: response.text,
     });
   } catch (error) {
-    console.error("Chat Error");
+    console.error("Chat Error:", error instanceof Error ? error.message : "Unknown error");
     return NextResponse.json({
       success: false,
-      error: "Internal Server Error",
+      error: "Chat service is temporarily unavailable.",
     }, { status: 500 });
   }
 }
