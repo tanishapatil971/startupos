@@ -532,7 +532,7 @@ function ProductDemo() {
                     exit={{ opacity: 0, y: -10 }}
                     transition={{ duration: 0.3 }}
                   >
-                    <DemoRoadmap isActive={activeTab === "roadmap"} />
+                    <DemoRoadmap />
                   </motion.div>
                 )}
                 {activeTab === "chat" && (
@@ -749,7 +749,7 @@ function DemoAnalysis({ isActive }: { isActive: boolean }) {
 /* ────────────────────────────────────────────────────────────────────────
    SUB-COMPONENT: TAB 2: DEMO ROADMAP
 ──────────────────────────────────────────────────────────────────────── */
-function DemoRoadmap(_props: { isActive: boolean }) {
+function DemoRoadmap() {
   const milestones = [
     { week: "Week 1–2", title: "Plug Onboarding Activation Leak", desc: "Redesign core flow, targets 40% conversion metrics. Direct interview on churn paths.", status: "completed" },
     { week: "Week 3–4", title: "Build Viral Growth Loops", desc: "Embed organic referral code flow inside the dashboard interface. Rewards system integration.", status: "current" },
