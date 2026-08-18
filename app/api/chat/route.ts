@@ -2,6 +2,7 @@ import { GoogleGenAI } from "@google/genai";
 import { createClient } from "@/lib/supabase-server";
 import { NextResponse } from "next/server";
 import { checkRateLimit } from "@/lib/rate-limit";
+import { logger } from "@/lib/logger";
 
 const ai = new GoogleGenAI({
   apiKey: process.env.GEMINI_API_KEY!,
@@ -55,7 +56,7 @@ ${message.substring(0, 1000)}
       reply: response.text,
     });
   } catch (error) {
-    console.error("Chat Error:", error instanceof Error ? error.message : "Unknown error");
+    logger.error("Chat failed", { error, route: "/api/chat", operation: "POST" });
     return NextResponse.json({
       success: false,
       error: "Chat service is temporarily unavailable.",

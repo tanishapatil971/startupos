@@ -24,7 +24,7 @@ export default function LoginPage() {
          setLoginSuccess(true);
       }
     } catch (e) {
-      console.error(e);
+      console.error("OAuth redirect failed:", e instanceof Error ? e.message : "Unknown error");
       setIsLoggingIn(false);
     }
   }

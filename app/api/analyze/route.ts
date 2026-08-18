@@ -2,6 +2,7 @@ import { GoogleGenAI } from "@google/genai";
 import { createClient } from "@/lib/supabase-server";
 import { NextResponse } from "next/server";
 import { checkRateLimit } from "@/lib/rate-limit";
+import { logger } from "@/lib/logger";
 
 const ai = new GoogleGenAI({
   apiKey: process.env.GEMINI_API_KEY!,
@@ -94,7 +95,7 @@ Rules:
       analysis,
     });
   } catch (error) {
-    console.error("Analysis Error:", error instanceof Error ? error.message : "Unknown error");
+    logger.error("Analysis failed", { error, route: "/api/analyze", operation: "POST" });
     return NextResponse.json({
       success: false,
       error: "Analysis failed. Please try again later.",

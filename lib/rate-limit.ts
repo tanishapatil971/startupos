@@ -1,5 +1,6 @@
 import { Ratelimit } from "@upstash/ratelimit";
 import { Redis } from "@upstash/redis";
+import { logger } from "@/lib/logger";
 
 // Default limits (can be overridden by env variables)
 const MAX_REQUESTS = parseInt(process.env.AI_RATE_LIMIT_REQUESTS || "20", 10);
@@ -41,8 +42,8 @@ try {
       ephemeralCache: new Map(), // Use a local cache for faster subsequent requests
     });
   }
-} catch {
-  console.warn("Failed to initialize Upstash Redis rate limiter, using fallback.");
+} catch (error) {
+  logger.warn("Failed to initialize Upstash Redis rate limiter, using fallback", { error, operation: "init" });
 }
 
 export async function checkRateLimit(userId: string, endpoint: string) {
@@ -52,8 +53,8 @@ export async function checkRateLimit(userId: string, endpoint: string) {
     try {
       const { success, reset } = await ratelimit.limit(identifier);
       return { success, reset };
-    } catch {
-      console.warn("Upstash Redis rate limiting failed, falling back to in-memory limit.");
+    } catch (error) {
+      logger.warn("Upstash Redis rate limiting failed, falling back to in-memory limit", { error, operation: "checkRateLimit", identifier });
       // Fallback if Redis request fails
       return getFallbackRateLimit(identifier);
     }

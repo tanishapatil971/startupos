@@ -2,6 +2,7 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase-server";
 import { checkRateLimit } from "@/lib/rate-limit";
+import { logger } from "@/lib/logger";
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
 
@@ -44,7 +45,7 @@ export async function POST(req: Request) {
       answer: response,
     });
   } catch (error) {
-    console.error("Cofounder API Error:", error instanceof Error ? error.message : "Unknown error");
+    logger.error("Cofounder service failed", { error, route: "/api/cofounder", operation: "POST" });
     return NextResponse.json(
       { error: "AI Cofounder is temporarily unavailable." },
       { status: 500 }

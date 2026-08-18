@@ -212,14 +212,14 @@ export default function Home() {
         .single();
 
       if (error) {
-        console.error("DATABASE ERROR:", error);
+        console.error("Database insert failed");
       } else {
         setReport(insertedReport);
         setAllReports((prev) => [insertedReport, ...prev]);
         setContext(""); // Clear context after success
       }
     } catch (err) {
-      console.error(err);
+      console.error("Analysis submission failed:", err instanceof Error ? err.message : "Unknown error");
       setError(err instanceof Error ? err.message : "An unexpected error occurred.");
     } finally {
       setLoading(false);

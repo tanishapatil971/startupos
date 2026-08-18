@@ -48,7 +48,7 @@ export default function ReportDetailPage() {
         .single();
 
       if (error || !data) {
-        console.error("Report not found", error);
+        console.error("Report load failed");
         router.push("/reports");
         return;
       }

@@ -91,11 +91,6 @@ export default function IntegrationsPage() {
 
   async function readWorkspaceFile(file: GoogleDriveFile) {
 
-    console.log(
-      "Selected file:",
-      file
-    );
-
 
     let url = "";
 
@@ -150,10 +145,7 @@ export default function IntegrationsPage() {
       await response.text();
 
 
-    console.log(
-      "FILE TEXT:",
-      text
-    );
+
 
 
     setDocumentText(

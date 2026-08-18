@@ -38,7 +38,7 @@ export default function CofounderPage() {
         .single();
 
       if (companyError || !company) {
-        console.error(companyError);
+        console.error("Failed to load company profile");
         setLoading(false);
         return;
       }
@@ -51,10 +51,8 @@ export default function CofounderPage() {
         .order("created_at", { ascending: false });
 
       if (memoryError) {
-        console.error(memoryError);
+        console.error("Failed to load company memory");
       }
-
-      console.log("Company Memory:", memory);
 
       // Build memory context
       const memoryContext =
@@ -180,7 +178,7 @@ Instructions:
 
       setQuestion("");
     } catch (err) {
-      console.error(err);
+      console.error("Cofounder query failed:", err instanceof Error ? err.message : "Unknown error");
       setError(err instanceof Error ? err.message : "An unexpected error occurred.");
     } finally {
       setLoading(false);
