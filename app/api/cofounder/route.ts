@@ -38,7 +38,7 @@ export async function POST(req: Request) {
       model: "gemini-2.5-flash",
     });
 
-    const result = await model.generateContent(prompt.substring(0, 1000));
+    const result = await model.generateContent(prompt.substring(0, 30000));
     const response = result.response.text();
 
     return NextResponse.json({

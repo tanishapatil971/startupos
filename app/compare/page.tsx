@@ -13,13 +13,13 @@ interface RoadmapItem {
 
 interface Report {
   id: string;
-  user_id: string;
+  user_id?: string;
   goal: string;
   health_score: number;
   risks: string[] | null;
   opportunities: string[] | null;
-  next_actions: string[] | null;
-  roadmap: RoadmapItem[] | null;
+  next_actions?: string[] | null;
+  roadmap?: RoadmapItem[] | null;
   created_at: string;
 }
 
@@ -36,9 +36,10 @@ export default function ComparePage() {
 
       const { data, error } = await supabase
         .from("reports")
-        .select("*")
+        .select("id, created_at, goal, health_score, risks, opportunities")
         .eq("user_id", user.id)
-        .order("created_at", { ascending: false });
+        .order("created_at", { ascending: false })
+        .limit(50);
 
       if (!error && data) {
         setReports(data);

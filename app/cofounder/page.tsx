@@ -30,12 +30,23 @@ export default function CofounderPage() {
         return;
       }
 
-      // Fetch company
-      const { data: company, error: companyError } = await supabase
-        .from("companies")
-        .select("*")
-        .eq("user_id", user.id)
-        .single();
+      // Fetch company and memory concurrently
+      const [companyRes, memoryRes] = await Promise.all([
+        supabase
+          .from("companies")
+          .select("id, name, industry, stage, description, target_customers, business_model, current_problem, main_goal")
+          .eq("user_id", user.id)
+          .single(),
+        supabase
+          .from("company_memory")
+          .select("source, title, content")
+          .eq("user_id", user.id)
+          .order("created_at", { ascending: false })
+          .limit(20)
+      ]);
+
+      const { data: company, error: companyError } = companyRes;
+      const { data: memory, error: memoryError } = memoryRes;
 
       if (companyError || !company) {
         console.error("Failed to load company profile");
@@ -43,33 +54,21 @@ export default function CofounderPage() {
         return;
       }
 
-      // Fetch company memory
-      const { data: memory, error: memoryError } = await supabase
-        .from("company_memory")
-        .select("*")
-        .eq("company_id", company.id)
-        .order("created_at", { ascending: false });
-
       if (memoryError) {
         console.error("Failed to load company memory");
       }
 
       // Build memory context
-      const memoryContext =
-        memory && memory.length > 0
-          ? memory
-              .map(
-                (m) => `
-Source: ${m.source}
-
-Title: ${m.title}
-
-Content:
-${m.content}
-`
-              )
-              .join("\n----------------------\n")
-          : "No company memory available.";
+      let memoryContext = "No company memory available.";
+      if (memory && memory.length > 0) {
+        const fullContext = memory
+          .map((m) => `\nSource: ${m.source}\n\nTitle: ${m.title}\n\nContent:\n${m.content}\n`)
+          .join("\n----------------------\n");
+        const MAX_MEMORY_CHARS = 10000;
+        memoryContext = fullContext.length > MAX_MEMORY_CHARS
+          ? fullContext.substring(0, MAX_MEMORY_CHARS) + "\n...[TRUNCATED]"
+          : fullContext;
+      }
 
       // Prompt
       const prompt = `
