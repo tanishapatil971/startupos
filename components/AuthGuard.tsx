@@ -1,114 +1,49 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { supabase } from "@/lib/supabase";
+import { useEffect } from "react";
 import { usePathname, useRouter } from "next/navigation";
+import { useAuth } from "@/components/AuthProvider";
 
 export default function AuthGuard({
   children,
 }: {
   children: React.ReactNode;
 }) {
-
   const router = useRouter();
   const pathname = usePathname();
+  const { session, isLoading, hasCompany } = useAuth();
 
-  const [checking, setChecking] = useState(true);
-
+  const isPublicRoute = pathname === "/login" || pathname === "/landing";
 
   useEffect(() => {
+    if (isPublicRoute || isLoading) return;
 
-    async function checkUser() {
-
-
-      if (pathname === "/login" || pathname === "/landing") {
-
-        setChecking(false);
-        return;
-
-      }
-
-
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-
-
-
-      if (!session) {
-
-        router.push("/landing");
-        return;
-
-      }
-
-
-
-      const { data: company } =
-        await supabase
-          .from("companies")
-          .select("id")
-          .eq(
-            "user_id",
-            session.user.id
-          )
-          .single();
-
-
-
-      if (
-        !company &&
-        pathname !== "/onboarding"
-      ) {
-
-        router.push("/onboarding");
-        return;
-
-      }
-
-
-
-      if (
-        company &&
-        pathname === "/onboarding"
-      ) {
-
-        router.push("/");
-        return;
-
-      }
-
-
-
-      setChecking(false);
-
+    if (!session) {
+      router.push("/landing");
+      return;
     }
 
+    if (hasCompany === false && pathname !== "/onboarding") {
+      router.push("/onboarding");
+      return;
+    }
 
-    checkUser();
+    if (hasCompany === true && pathname === "/onboarding") {
+      router.push("/");
+      return;
+    }
+  }, [pathname, router, session, isLoading, hasCompany, isPublicRoute]);
 
-
-  }, [pathname, router]);
-
-
-
+  // Derive checking state from context — no setState needed
+  const checking = !isPublicRoute && (isLoading || hasCompany === null);
 
   if (checking) {
-
     return (
-
       <div className="flex min-h-screen items-center justify-center text-white">
-
         Loading StartupOS...
-
       </div>
-
     );
-
   }
 
-
-
   return children;
-
 }

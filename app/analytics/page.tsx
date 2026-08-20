@@ -4,6 +4,7 @@ import { useEffect, useState, useRef } from "react";
 import { supabase } from "@/lib/supabase";
 import PageHeader from "@/components/PageHeader";
 import Badge from "@/components/Badge";
+import { useAuth } from "@/components/AuthProvider";
 
 interface Report {
   id: string;
@@ -17,6 +18,7 @@ interface Report {
 }
 
 export default function AnalyticsPage() {
+  const { user } = useAuth();
   const [reports, setReports] = useState<Report[]>([]);
   const [loading, setLoading] = useState(true);
   const healthCanvasRef = useRef<HTMLCanvasElement>(null);
@@ -24,7 +26,6 @@ export default function AnalyticsPage() {
 
   useEffect(() => {
     async function loadAnalytics() {
-      const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
       const { data, error } = await supabase
@@ -41,7 +42,7 @@ export default function AnalyticsPage() {
     }
 
     loadAnalytics();
-  }, []);
+  }, [user]);
 
   // Shared chart drawing function
   function drawLineChart(

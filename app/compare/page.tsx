@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import PageHeader from "@/components/PageHeader";
 import Badge from "@/components/Badge";
+import { useAuth } from "@/components/AuthProvider";
 
 interface RoadmapItem {
   week: string;
@@ -24,6 +25,7 @@ interface Report {
 }
 
 export default function ComparePage() {
+  const { user } = useAuth();
   const [reports, setReports] = useState<Report[]>([]);
   const [first, setFirst] = useState<Report | null>(null);
   const [second, setSecond] = useState<Report | null>(null);
@@ -31,7 +33,6 @@ export default function ComparePage() {
 
   useEffect(() => {
     async function loadReports() {
-      const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
       const { data, error } = await supabase
@@ -51,7 +52,7 @@ export default function ComparePage() {
       setLoading(false);
     }
     loadReports();
-  }, []);
+  }, [user]);
 
   if (loading) {
     return (

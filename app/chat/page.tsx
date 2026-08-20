@@ -3,8 +3,10 @@
 import { useState, useRef, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 import PageHeader from "@/components/PageHeader";
+import { useAuth } from "@/components/AuthProvider";
 
 export default function ChatPage() {
+  const { user } = useAuth();
   const [messages, setMessages] = useState<
     { role: "user" | "assistant"; content: string }[]
   >([]);
@@ -17,7 +19,6 @@ export default function ChatPage() {
   // Load company data for contextual prompts
   useEffect(() => {
     async function loadContext() {
-      const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
       const { data } = await supabase
         .from("companies")
@@ -27,7 +28,7 @@ export default function ChatPage() {
       if (data) setCompanyName(data.name);
     }
     loadContext();
-  }, []);
+  }, [user]);
 
   // Auto-scroll on new messages
   useEffect(() => {

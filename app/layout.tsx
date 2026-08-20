@@ -4,6 +4,7 @@ import "./globals.css";
 import Script from "next/script";
 
 import AppShell from "@/components/AppShell";
+import { AuthProvider } from "@/components/AuthProvider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -36,9 +37,11 @@ export default function RootLayout({
   strategy="beforeInteractive"
 />
 
-        <AppShell>
-          {children}
-        </AppShell>
+        <AuthProvider>
+          <AppShell>
+            {children}
+          </AppShell>
+        </AuthProvider>
 
       </body>
     </html>

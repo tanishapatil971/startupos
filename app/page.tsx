@@ -5,6 +5,7 @@ import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import PageHeader from "@/components/PageHeader";
 import Badge from "@/components/Badge";
+import { useAuth } from "@/components/AuthProvider";
 
 interface RoadmapItem {
   week: string;
@@ -25,6 +26,7 @@ interface Report {
 }
 
 export default function Home() {
+  const { user } = useAuth();
   const [report, setReport] = useState<Report | null>(null);
   const [allReports, setAllReports] = useState<Report[]>([]);
   const [context, setContext] = useState("");
@@ -36,7 +38,6 @@ export default function Home() {
 
   useEffect(() => {
     async function loadData() {
-      const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
       const { data, error } = await supabase
@@ -54,7 +55,7 @@ export default function Home() {
       setFetchingInitial(false);
     }
     loadData();
-  }, []);
+  }, [user]);
 
   // Draw health trend chart
   useEffect(() => {
@@ -194,7 +195,6 @@ export default function Home() {
         throw new Error(data.error || "Failed to analyze startup.");
       }
 
-      const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
       const { data: insertedReport, error } = await supabase

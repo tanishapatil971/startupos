@@ -55,8 +55,11 @@ interface OnboardingForm {
   main_goal: string;
 }
 
+import { useAuth } from "@/components/AuthProvider";
+
 export default function OnboardingPage() {
   const router = useRouter();
+  const { user, refreshCompany } = useAuth();
   
   const [currentStep, setCurrentStep] = useState(0);
   const [form, setForm] = useState<OnboardingForm>({
@@ -134,8 +137,6 @@ export default function OnboardingPage() {
     setIsSaving(true);
     setErrorMsg("");
     
-    const { data: { user } } = await supabase.auth.getUser();
-
     if (!user) {
       setErrorMsg("Authentication error. Please sign in again.");
       setIsSaving(false);
@@ -152,6 +153,8 @@ export default function OnboardingPage() {
       setIsSaving(false);
       return;
     }
+
+    await refreshCompany();
 
     // Success animation phase
     setIsSuccess(true);

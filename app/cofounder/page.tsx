@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { supabase } from "@/lib/supabase";
+import { useAuth } from "@/components/AuthProvider";
 
 interface Message {
   role: "user" | "ai";
@@ -9,6 +10,7 @@ interface Message {
 }
 
 export default function CofounderPage() {
+  const { user } = useAuth();
   const [question, setQuestion] = useState("");
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(false);
@@ -21,10 +23,6 @@ export default function CofounderPage() {
     setError(null);
 
     try {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-
       if (!user) {
         setLoading(false);
         return;

@@ -4,14 +4,15 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import PageHeader from "@/components/PageHeader";
 import Badge from "@/components/Badge";
+import { useAuth } from "@/components/AuthProvider";
 
 export default function ActionsPage() {
+  const { user } = useAuth();
   const [actions, setActions] = useState<{ text: string; completed: boolean }[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function loadActions() {
-      const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
       const { data, error } = await supabase
@@ -33,7 +34,7 @@ export default function ActionsPage() {
       setLoading(false);
     }
     loadActions();
-  }, []);
+  }, [user]);
 
   const toggle = (index: number) => {
     setActions((prev) =>

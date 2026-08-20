@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import PageHeader from "@/components/PageHeader";
 import Badge from "@/components/Badge";
+import { useAuth } from "@/components/AuthProvider";
 
 interface RoadmapItem {
   week: string;
@@ -27,6 +28,7 @@ interface Report {
 export default function ReportDetailPage() {
   const { id } = useParams();
   const router = useRouter();
+  const { user } = useAuth();
   const [report, setReport] = useState<Report | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -34,7 +36,6 @@ export default function ReportDetailPage() {
     async function loadReport() {
       if (!id) return;
 
-      const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
         router.push("/login");
         return;
@@ -57,7 +58,7 @@ export default function ReportDetailPage() {
       setLoading(false);
     }
     loadReport();
-  }, [id, router]);
+  }, [id, router, user]);
 
   if (loading) {
     return (
